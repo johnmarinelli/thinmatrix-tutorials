@@ -22,10 +22,6 @@ static std::map<TexturedModelType, std::string> textureModelStrings = {
   std::pair<TexturedModelType, std::string>{TexturedModelType::CUBE, "CUBE"}
 };
 
-/*static std::map<TexturedModelType, std::string> createTextureModelStringsMap() {
-  std::map<TexturedModelType, std::string> map;
-}*/
-
 class TexturedModel {
 public:
   RawModel mRawModel;
@@ -38,7 +34,7 @@ public:
     mModelType(TexturedModelType::NONE) {    
   }
   
-  TexturedModel(RawModel rawModel, ModelTexture modelTexture, TexturedModelType type) :
+  TexturedModel(const RawModel& rawModel, const ModelTexture& modelTexture, TexturedModelType type) :
     mRawModel(rawModel),
     mModelTexture(modelTexture),
     mModelType(type) {

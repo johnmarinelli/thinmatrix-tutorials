@@ -22,7 +22,7 @@ public:
   int mRenderWidth, mRenderHeight;
   Camera mCamera;
   
-  typedef std::map<TexturedModelType, std::pair<TexturedModel, std::vector<Entity>>> TexturedEntityMap;
+  typedef std::map<TexturedModelType, std::pair<TexturedModel, std::vector<std::shared_ptr<Entity>>>> TexturedEntityMap;
   
   Renderer() :
     mWindowHdl(nullptr),
@@ -113,48 +113,12 @@ public:
     }
   }
   
-  void prepareInstance(Entity& entity) {
+  void prepareInstance(std::shared_ptr<Entity> entity) {
     glm::mat4 modelMatrix{1.0f};
-    entity.mRotationAngle = glfwGetTime() * 0.25;
-    modelMatrix = glm::scale(modelMatrix, entity.mScale);
-    modelMatrix = glm::rotate(modelMatrix, entity.mRotationAngle, entity.mRotation);
-    modelMatrix = glm::translate(modelMatrix, entity.mPosition);
+    modelMatrix = glm::scale(modelMatrix, entity->mScale);
+    modelMatrix = glm::rotate(modelMatrix, entity->mRotationAngle, entity->mRotation);
+    modelMatrix = glm::translate(modelMatrix, entity->mPosition);
     mShaderProgram.loadModelMatrix(modelMatrix, "modelMatrix");
-  }
-  
-  void render(const Entity& entity) {
-    auto model = entity.mModel;
-    auto rawModel = model.mRawModel;
-    auto texture = model.mModelTexture;
-    
-    glViewport(0, 0, mRenderWidth, mRenderHeight);
-    
-    glm::mat4 modelMatrix{1.0f};
-    modelMatrix = glm::scale(modelMatrix, entity.mScale);
-    modelMatrix = glm::rotate(modelMatrix, entity.mRotationAngle, entity.mRotation);
-    modelMatrix = glm::translate(modelMatrix, entity.mPosition);
-    
-    glm::mat4 viewMatrix = mCamera.createViewMatrix();
-    
-    glBindVertexArray(rawModel.mVaoID);
-    
-    for (auto att : rawModel.mAttributes) {
-      glEnableVertexAttribArray(att);
-    }
-    
-    mShaderProgram.loadViewMatrix(viewMatrix, "viewMatrix");
-    mShaderProgram.loadModelMatrix(modelMatrix, "modelMatrix");
-    mShaderProgram.loadShineVariables(texture.mShineDamper, texture.mReflectivity, "shineDamper", "reflectivity");
-    
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, model.mModelTexture.mTextureID);
-    glDrawElements(GL_TRIANGLES, rawModel.mIndexCount, GL_UNSIGNED_INT, 0);
-    
-    for (auto att : rawModel.mAttributes) {
-      glDisableVertexAttribArray(att);
-    }
-    
-    glBindVertexArray(0);
   }
 };
 

@@ -17,12 +17,16 @@ public:
   Renderer mRenderer;
   GLFWwindow* mWindowHdl;
   
-  std::map<TexturedModelType, std::pair<TexturedModel, std::vector<Entity>>> mEntities;
+  std::map<TexturedModelType, std::pair<TexturedModel, std::vector<std::shared_ptr<Entity>>>> mEntities;
   
   MasterRenderer() :
     mShaderProgram(),
     mWindowHdl(nullptr),
     mRenderer() {    
+    }
+  
+  void moveCamera(MovementDirection dir) {
+    mRenderer.mCamera.move(dir);
   }
   
   MasterRenderer(GLFWwindow* window, const ShaderProgram& program) :
@@ -40,7 +44,7 @@ public:
   void addTexturedModel(const TexturedModel& texturedModel) {
     auto texturedModelType = texturedModel.mModelType;
     if (mEntities.find(texturedModelType) == mEntities.end()) {
-      mEntities[texturedModelType] = std::pair<TexturedModel, std::vector<Entity>>{texturedModel, std::vector<Entity>{}};
+      mEntities[texturedModelType] = std::pair<TexturedModel, std::vector<std::shared_ptr<Entity>>>{texturedModel, std::vector<std::shared_ptr<Entity>>{}};
     }
     else {
       auto typeStr = textureModelStrings[texturedModelType];
@@ -48,7 +52,7 @@ public:
     }
   }
   
-  void addEntity(const Entity& entity, TexturedModelType texturedModelType) {
+  void addEntity(const std::shared_ptr<Entity>& entity, TexturedModelType texturedModelType) {
 
     if (mEntities.find(texturedModelType) == mEntities.end()) {
       auto typeStr = textureModelStrings[texturedModelType];
@@ -63,7 +67,7 @@ public:
     mRenderer.prepare();
     
     mShaderProgram.use();
-    mShaderProgram.addLight(sun, "lightPosition", "lightColor");
+    mShaderProgram.loadLight(sun, "lightPosition", "lightColor");
     mShaderProgram.loadAmbientFactor(0.2f, "ambientFactor");
 
     mShaderProgram.loadProjectionMatrix(mRenderer.mProjectionMatrix, "projectionMatrix");

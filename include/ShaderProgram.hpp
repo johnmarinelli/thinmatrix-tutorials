@@ -39,7 +39,7 @@ public:
     use();
   }
   
-  void addLight(const Light& light, const std::string& posName, const std::string& colName) {
+  void loadLight(const Light& light, const std::string& posName, const std::string& colName) {
     auto lightPosLocation = mUniforms[posName],
       lightColLocation = mUniforms[colName];
     
@@ -79,7 +79,7 @@ public:
     
   }
   
-  inline void use () {
+  inline void use() {
     if (mInitialized) {
       glUseProgram(mProgramID);
     }
@@ -117,7 +117,7 @@ public:
     return mUniforms[uniformName];
   }
   
-  int addAttribute(const std::string attributeName) {
+  int registerAttribute(const std::string attributeName) {
     // add attribute location value for attributeName key
     mAttributes[attributeName] = glGetAttribLocation(mProgramID, attributeName.c_str());
     
@@ -131,7 +131,7 @@ public:
     return mAttributes[attributeName];
   }
   
-  int addUniform(const std::string uniformName) {
+  int registerUniform(const std::string uniformName) {
     mUniforms[uniformName] = glGetUniformLocation(mProgramID, uniformName.c_str());
     
     if (-1 == mUniforms[uniformName]) {

@@ -117,10 +117,10 @@ public:
                                       (GLuint*) &mIndicesVector[0],
                                       (GLfloat*) &mTexturesVector[0],
                                       (GLfloat*) &mNormalsVector[0],
-                                      mVerticesVector.size(),
-                                      mIndicesVector.size(),
-                                      mTexturesVector.size(),
-                                      mNormalsVector.size());
+                                      (GLuint) mVerticesVector.size(),
+                                      (GLuint) mIndicesVector.size(),
+                                      (GLuint) mTexturesVector.size(),
+                                      (GLuint) mNormalsVector.size());
     
     return model;
   }

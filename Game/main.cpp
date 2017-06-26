@@ -23,7 +23,6 @@ const int WIDTH = 640;
 const int HEIGHT = 480;
 
 MasterRenderer masterRenderer;
-Renderer renderer;
 
 static void errorCallback(int err, const char* desc) {
   fprintf(stderr, "Error: %s\n", desc);
@@ -32,20 +31,18 @@ static void errorCallback(int err, const char* desc) {
 static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) glfwSetWindowShouldClose(window, GLFW_TRUE);
   
-  Renderer* renderer = &masterRenderer.mRenderer;
-  
   if (GLFW_PRESS == action || GLFW_REPEAT == action) {
     if (GLFW_KEY_W == key) {
-      renderer->moveCamera(MovementDirection::UP);
+      masterRenderer.moveCamera(MovementDirection::UP);
     }
     else if(GLFW_KEY_D == key) {
-      renderer->moveCamera(MovementDirection::RIGHT);
+      masterRenderer.moveCamera(MovementDirection::RIGHT);
     }
     else if (GLFW_KEY_A == key) {
-      renderer->moveCamera(MovementDirection::LEFT);
+      masterRenderer.moveCamera(MovementDirection::LEFT);
     }
     else if (GLFW_KEY_S == key) {
-      renderer->moveCamera(MovementDirection::DOWN);
+      masterRenderer.moveCamera(MovementDirection::DOWN);
     }
   }
 }
@@ -53,6 +50,16 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 ShaderProgram loadShaders() {
   ShaderProgram shaderProgram;
   shaderProgram.initFromFiles("resources/shaders/game.vert", "resources/shaders/game.frag");
+  
+  shaderProgram.registerUniform("projectionMatrix");
+  shaderProgram.registerUniform("viewMatrix");
+  shaderProgram.registerUniform("modelMatrix");
+  shaderProgram.registerUniform("lightPosition");
+  shaderProgram.registerUniform("lightColor");
+  shaderProgram.registerUniform("shineDamper");
+  shaderProgram.registerUniform("reflectivity");
+  shaderProgram.registerUniform("ambientFactor");
+  
   return shaderProgram;
 }
 
@@ -87,16 +94,6 @@ int main(int argc, const char * argv[]) {
   GLFWwindow* window = initGLFW();
   
   ShaderProgram shaderProgram = loadShaders();
-  
-  shaderProgram.addUniform("projectionMatrix");
-  shaderProgram.addUniform("viewMatrix");
-  shaderProgram.addUniform("modelMatrix");
-  shaderProgram.addUniform("lightPosition");
-  shaderProgram.addUniform("lightColor");
-  shaderProgram.addUniform("shineDamper");
-  shaderProgram.addUniform("reflectivity");
-  shaderProgram.addUniform("ambientFactor");
-  
   glm::vec3 lightPos{0.0f, 0.0f, -20.0f};
   glm::vec3 lightCol{1.0f, 1.0f, 1.0f};
   Light light{lightPos, lightCol};
@@ -113,13 +110,14 @@ int main(int argc, const char * argv[]) {
   modelTexture.mShineDamper = 1.0f;
   modelTexture.mReflectivity = 1.0f;
   TexturedModel texturedModel{model, modelTexture, TexturedModelType::DRAGON};
-  Entity entity{texturedModel, glm::vec3{0.0f, 0.0f, -15.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f}};
+  std::shared_ptr<Entity> entity = std::make_shared<Entity>(texturedModel, glm::vec3{0.0f, 0.0f, -15.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
   
   masterRenderer.addTexturedModel(texturedModel);
   masterRenderer.addEntity(entity, TexturedModelType::DRAGON);
   
   while (!glfwWindowShouldClose(window)) {
     masterRenderer.render(light);
+    entity->mRotationAngle = glfwGetTime() * 0.25;
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
