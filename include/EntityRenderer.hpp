@@ -14,61 +14,29 @@
 #include "Utilities.h"
 #include "Camera.hpp"
 
-class Renderer {
+class EntityRenderer {
 public:
-  glm::mat4 mProjectionMatrix;
   GLFWwindow* mWindowHdl;
   ShaderProgram mShaderProgram;
-  int mRenderWidth, mRenderHeight;
   Camera mCamera;
+  glm::mat4 mProjectionMatrix;
   
   typedef std::map<TexturedModelType, std::pair<TexturedModel, std::vector<std::shared_ptr<Entity>>>> TexturedEntityMap;
   
-  Renderer() :
-    mWindowHdl(nullptr),
-    mRenderWidth(0),
-    mRenderHeight(0) {
+  EntityRenderer() :
+    mWindowHdl(nullptr) {
   }
   
-  Renderer(GLFWwindow* window) :
+  EntityRenderer(GLFWwindow* window, const ShaderProgram& program) :
     mWindowHdl(window),
-    mRenderWidth(0),
-    mRenderHeight(0) {
-  }
-  
-  Renderer(GLFWwindow* window, const ShaderProgram& program) :
-    mWindowHdl(window),
-    mRenderWidth(0),
-    mRenderHeight(0),
     mShaderProgram(program) {
   }
-  
-  void init() {
-    glfwGetFramebufferSize(mWindowHdl, &mRenderWidth, &mRenderHeight);
-    mProjectionMatrix = createProjectionMatrix(mRenderWidth, mRenderHeight);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-  }
-  
-  void prepare() {
-    glEnable(GL_DEPTH_TEST);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
+
+  void init(const glm::mat4 projMatrix) {
+    mProjectionMatrix = projMatrix;
+    mShaderProgram.use();
     mShaderProgram.loadProjectionMatrix(mProjectionMatrix, "projectionMatrix");
-  }
-  
-  glm::mat4 createProjectionMatrix(int width, int height) const {
-    float ratio;
-    ratio = width / (float) height;
-    
-    glm::mat4 projection;
-    
-    //projection = glm::ortho(-ratio, ratio, -1.0f, 1.0f, 1.0f, -1.0f);
-    projection = glm::perspective(70.0f, ratio, 0.1f, 1000.0f);
-    glViewport(0, 0, width, height);
-    
-    return projection;
+    mShaderProgram.disable();
   }
   
   void moveCamera(MovementDirection dir) {

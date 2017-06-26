@@ -18,7 +18,7 @@ public:
   std::vector<GLuint> mVBOs = {};
   std::vector<GLuint> mTextures = {};
   
-  RawModel loadToVAO(GLfloat positions[], GLuint indices[], GLfloat texCoords[], GLuint numVertices, GLuint numIndices, GLuint numTextureCoords) {
+  /*RawModel loadToVAO(GLfloat positions[], GLuint indices[], GLfloat texCoords[], GLuint numVertices, GLuint numIndices, GLuint numTextureCoords) {
     GLuint vaoID = createVAO();
     bindIndicesBuffer(indices, numIndices);
     
@@ -32,9 +32,16 @@ public:
     model.mAttributes.push_back(TEXTURE_COORD_ATTRIBUTE_INDEX);
     
     return model;
-  }
+  }*/
   
-  RawModel loadToVAO(GLfloat positions[], GLuint indices[], GLfloat texCoords[], GLfloat normals[], GLuint numVertices, GLuint numIndices, GLuint numTextureCoords, GLuint numNormals) {
+  RawModel loadToVAO(GLfloat positions[],
+                     GLuint indices[],
+                     GLfloat texCoords[],
+                     GLfloat normals[],
+                     GLuint numVertices,
+                     GLuint numIndices,
+                     GLuint numTextureCoords,
+                     GLuint numNormals) {
     GLuint vaoID = createVAO();
     bindIndicesBuffer(indices, numIndices);
     

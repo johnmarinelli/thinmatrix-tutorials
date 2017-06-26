@@ -18,6 +18,7 @@
 #include "Entity.hpp"
 #include "ObjLoader.hpp"
 #include "Light.hpp"
+#include "Terrain.hpp"
 
 const int WIDTH = 640;
 const int HEIGHT = 480;
@@ -63,6 +64,22 @@ ShaderProgram loadShaders() {
   return shaderProgram;
 }
 
+TerrainShader loadTerrainShader() {
+  TerrainShader shaderProgram;
+  shaderProgram.initFromFiles("resources/shaders/terrain.vert", "resources/shaders/terrain.frag");
+  
+  shaderProgram.registerUniform("projectionMatrix");
+  shaderProgram.registerUniform("viewMatrix");
+  shaderProgram.registerUniform("modelMatrix");
+  shaderProgram.registerUniform("lightPosition");
+  shaderProgram.registerUniform("lightColor");
+  shaderProgram.registerUniform("shineDamper");
+  shaderProgram.registerUniform("reflectivity");
+  shaderProgram.registerUniform("ambientFactor");
+  
+  return shaderProgram;
+}
+
 static GLFWwindow* initGLFW() {
   GLFWwindow* window;
   glfwSetErrorCallback(errorCallback);
@@ -94,6 +111,7 @@ int main(int argc, const char * argv[]) {
   GLFWwindow* window = initGLFW();
   
   ShaderProgram shaderProgram = loadShaders();
+  TerrainShader terrainShader = loadTerrainShader();
   glm::vec3 lightPos{0.0f, 0.0f, -20.0f};
   glm::vec3 lightCol{1.0f, 1.0f, 1.0f};
   Light light{lightPos, lightCol};
@@ -103,17 +121,24 @@ int main(int argc, const char * argv[]) {
   ObjLoader objLoader;
   masterRenderer.mWindowHdl = window;
   masterRenderer.mShaderProgram = shaderProgram;
+  masterRenderer.mTerrainShader = terrainShader;
   masterRenderer.init();
   
   RawModel model = objLoader.loadObjModel("resources/meshes/dragon.obj", loader);
   ModelTexture modelTexture{loader.loadTexture("resources/textures/scales.png")};
-  modelTexture.mShineDamper = 1.0f;
+  modelTexture.mShineDamper = 0.5f;
   modelTexture.mReflectivity = 1.0f;
   TexturedModel texturedModel{model, modelTexture, TexturedModelType::DRAGON};
   std::shared_ptr<Entity> entity = std::make_shared<Entity>(texturedModel, glm::vec3{0.0f, 0.0f, -15.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
   
+  ModelTexture terrainTexture{loader.loadTexture("resources/textures/grass.png")};
+  terrainTexture.mShineDamper = 0.5f;
+  terrainTexture.mReflectivity = 1.0f;
+  Terrain terrain{0, 0, loader, terrainTexture};
+  
   masterRenderer.addTexturedModel(texturedModel);
   masterRenderer.addEntity(entity, TexturedModelType::DRAGON);
+  masterRenderer.addTerrain(terrain);
   
   while (!glfwWindowShouldClose(window)) {
     masterRenderer.render(light);

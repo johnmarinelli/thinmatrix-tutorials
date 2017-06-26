@@ -23,7 +23,7 @@ public:
   float mCameraStep;
   
   Camera() :
-    mPosition(glm::vec3{0.0f, 0.0f, 0.0f}),
+    mPosition(glm::vec3{0.0f, 5.0f, 0.0f}),
     mCameraStep(1.0f) {
     mViewMatrix = createViewMatrix();
   }
