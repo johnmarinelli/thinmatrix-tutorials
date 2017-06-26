@@ -10,11 +10,16 @@ public:
   float mShineDamper;
   float mReflectivity;
   
+  ModelTexture() :
+    mTextureID(-1),
+    mShineDamper(1.0f),
+    mReflectivity(0.0f) {
+  }
+  
   ModelTexture(GLint texID) :
     mTextureID(texID),
     mShineDamper(1.0f),
-    mReflectivity(0.0f) {
-    
+    mReflectivity(0.0f) {    
   }
   
 };

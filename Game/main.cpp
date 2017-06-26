@@ -10,7 +10,7 @@
 #include <png.h>
 
 #include "RawModel.hpp"
-#include "Renderer.hpp"
+#include "MasterRenderer.hpp"
 #include "Loader.hpp"
 #include "ShaderProgram.hpp"
 #include "ModelTexture.hpp"
@@ -22,6 +22,7 @@
 const int WIDTH = 640;
 const int HEIGHT = 480;
 
+MasterRenderer masterRenderer;
 Renderer renderer;
 
 static void errorCallback(int err, const char* desc) {
@@ -31,19 +32,20 @@ static void errorCallback(int err, const char* desc) {
 static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) glfwSetWindowShouldClose(window, GLFW_TRUE);
   
+  Renderer* renderer = &masterRenderer.mRenderer;
+  
   if (GLFW_PRESS == action || GLFW_REPEAT == action) {
     if (GLFW_KEY_W == key) {
-      renderer.moveCamera(MovementDirection::UP);
+      renderer->moveCamera(MovementDirection::UP);
     }
     else if(GLFW_KEY_D == key) {
-      renderer.moveCamera(MovementDirection::RIGHT);
-      
+      renderer->moveCamera(MovementDirection::RIGHT);
     }
     else if (GLFW_KEY_A == key) {
-      renderer.moveCamera(MovementDirection::LEFT);
+      renderer->moveCamera(MovementDirection::LEFT);
     }
     else if (GLFW_KEY_S == key) {
-      renderer.moveCamera(MovementDirection::DOWN);      
+      renderer->moveCamera(MovementDirection::DOWN);
     }
   }
 }
@@ -102,28 +104,22 @@ int main(int argc, const char * argv[]) {
   Loader loader;
   
   ObjLoader objLoader;
+  masterRenderer.mWindowHdl = window;
+  masterRenderer.mShaderProgram = shaderProgram;
+  masterRenderer.init();
   
   RawModel model = objLoader.loadObjModel("resources/meshes/dragon.obj", loader);
-
-  renderer.mWindowHdl = window;
-  renderer.init();
-  
   ModelTexture modelTexture{loader.loadTexture("resources/textures/scales.png")};
   modelTexture.mShineDamper = 1.0f;
   modelTexture.mReflectivity = 1.0f;
-  TexturedModel texturedModel{model, modelTexture};
-  Entity entity{texturedModel, glm::vec3{0.0f, 0.0f, -25.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f}};
+  TexturedModel texturedModel{model, modelTexture, TexturedModelType::DRAGON};
+  Entity entity{texturedModel, glm::vec3{0.0f, 0.0f, -15.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f}};
+  
+  masterRenderer.addTexturedModel(texturedModel);
+  masterRenderer.addEntity(entity, TexturedModelType::DRAGON);
   
   while (!glfwWindowShouldClose(window)) {
-    renderer.prepare();
-    
-    shaderProgram.use();
-    shaderProgram.addLight(light, "lightPosition", "lightColor");
-    shaderProgram.loadAmbientFactor(0.2f, "ambientFactor");
-    
-    entity.mRotationAngle = glfwGetTime();
-    renderer.render(entity, shaderProgram);
-    
+    masterRenderer.render(light);
     glfwSwapBuffers(window);
     glfwPollEvents();
   }

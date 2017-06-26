@@ -13,6 +13,14 @@ public:
   float mRotationAngle;
   glm::vec3 mScale;
   
+  Entity() :
+    mModel(),
+    mPosition(glm::vec3{0.0f}),
+    mRotation(glm::vec3{0.0f}),
+    mRotationAngle(0.0f),
+    mScale(glm::vec3{0.0f}) {
+  }
+  
   Entity(const TexturedModel& model, const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scl) :
     mModel(model),
     mPosition(pos),

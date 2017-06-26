@@ -16,10 +16,8 @@ public:
   
   ShaderProgram() :
     mInitialized(false),
-    mProgramID(glCreateProgram())
-  {
-   glUseProgram(mProgramID);
-   mShaderCount = 0;
+    mProgramID(-1) {
+    mShaderCount = 0;
   }
   
   ~ShaderProgram() {
@@ -27,14 +25,18 @@ public:
   }
   
   void initFromFiles(std::string vertexShaderFilename, std::string fragmentShaderFilename) {
+    if (-1 == mProgramID) mProgramID = glCreateProgram();
     std::string vertexShaderSource = loadShaderFromFile(vertexShaderFilename);
     std::string fragmentShaderSource = loadShaderFromFile(fragmentShaderFilename);
     
     initialize(vertexShaderSource, fragmentShaderSource);
+    use();
   }
   
   void initFromString(std::string vertexShaderSource, std::string fragmentShaderSource) {
+    if (-1 == mProgramID) mProgramID = glCreateProgram();
     initialize(vertexShaderSource, fragmentShaderSource);
+    use();
   }
   
   void addLight(const Light& light, const std::string& posName, const std::string& colName) {
@@ -56,6 +58,25 @@ public:
     auto ambientFactorLocation = mUniforms[ambientName];
     
     glUniform1f(ambientFactorLocation, ambientFactor);
+  }
+  
+  void loadProjectionMatrix(const glm::mat4& projectionMatrix, const std::string& projectionMatrixName) {
+    auto projectionMatrixLocation = mUniforms[projectionMatrixName];
+    
+    glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+  }
+  
+  void loadViewMatrix(const glm::mat4& viewMatrix, const std::string& viewMatrixName) {
+    auto viewMatrixLocation = mUniforms[viewMatrixName];
+    
+    glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+  }
+  
+  void loadModelMatrix(const glm::mat4& modelMatrix, const std::string& modelMatrixName) {
+    auto modelMatrixLocation = mUniforms[modelMatrixName];
+    
+    glUniformMatrix4fv(modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+    
   }
   
   inline void use () {
@@ -131,7 +152,7 @@ public:
   };
   
   // individual shader ids
-  GLuint mProgramID;
+  GLint mProgramID;
   GLuint mVertexShaderID;
   GLuint mFragmentShaderID;
   

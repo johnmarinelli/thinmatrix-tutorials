@@ -43,7 +43,7 @@ public:
     }
   }
   
-  glm::mat4 createViewMatrix() {
+  glm::mat4 createViewMatrix() const {
     glm::mat4 view{1.0f};
     view = glm::rotate(view, toRadians(mPitch), glm::vec3{1.0f, 0.0f, 0.0f});
     view = glm::rotate(view, toRadians(mYaw), glm::vec3{0.0f, 1.0f, 0.0f});
