@@ -1,0 +1,4 @@
+.DS_Store
+Game.xcodeproj
+*.obj
+*.png
