@@ -12,6 +12,12 @@ public:
     ShaderProgram() {    
   }
   
+  void loadUseFakeLighting(bool useFake, const std::string& useFakeLightingName) {
+    auto useFakeLightingLocation = mUniforms[useFakeLightingName];
+    
+    glUniform1f(useFakeLightingLocation, useFake ? 1.0 : 0.0);
+  }
+  
   void loadLight(const Light& light, const std::string& posName, const std::string& colName) {
     auto lightPosLocation = mUniforms[posName],
     lightColLocation = mUniforms[colName];

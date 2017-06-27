@@ -9,17 +9,23 @@ public:
   GLint mTextureID;
   float mShineDamper;
   float mReflectivity;
+  bool mHasTransparency;
+  bool mUseFakeLighting;
   
   ModelTexture() :
     mTextureID(-1),
     mShineDamper(1.0f),
-    mReflectivity(0.0f) {
+    mReflectivity(0.0f),
+    mHasTransparency(false),
+    mUseFakeLighting(false) {
   }
   
   ModelTexture(GLint texID) :
     mTextureID(texID),
     mShineDamper(1.0f),
-    mReflectivity(0.0f) {    
+    mReflectivity(0.0f),
+    mHasTransparency(false),
+    mUseFakeLighting(false) {
   }
   
 };

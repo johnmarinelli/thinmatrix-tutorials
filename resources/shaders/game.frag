@@ -33,6 +33,12 @@ void main(void) {
   vec3 diffuse = brightness * lightColor;
   
   vec3 light = diffuse + specular;
+
+  vec4 texColor = texture(textureSampler, texCoord);
   
-  fragColor = vec4(light, 1.0) * texture(textureSampler, texCoord);
+  if (texColor.a < 0.5) {
+    discard;
+  }
+  
+  fragColor = vec4(light, 1.0) * texColor;
 }

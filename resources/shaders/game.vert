@@ -12,17 +12,25 @@ uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 modelMatrix;
 
+uniform float useFakeLighting;
+
 out vec3 color;
 out vec2 texCoord;
 out vec3 worldNormal;
 out vec3 toLightDir;
 out vec3 cameraDir;
 
-void main(void) { 
+void main(void) {
+  vec3 actualNormal = vNormal;
+  
+  if (useFakeLighting > 0.5) {
+    actualNormal = vec3(0.0, 1.0, 0.0);
+  }
+  
   vec4 worldPosition = modelMatrix * vec4(vPos, 1.0);
   
   texCoord = vTexCoord;
-  worldNormal = (modelMatrix * vec4(vNormal, 0.0)).xyz;
+  worldNormal = (modelMatrix * vec4(actualNormal, 0.0)).xyz;
   toLightDir = lightPosition - worldPosition.xyz;
   
   // view matrix contains inverse of camera's location

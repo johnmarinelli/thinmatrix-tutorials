@@ -69,12 +69,18 @@ public:
       glEnableVertexAttribArray(att);
     }
     
+    if (texture.mHasTransparency) {
+      disableCulling();
+    }
+    
     mShaderProgram.loadShineVariables(texture.mShineDamper, texture.mReflectivity, "shineDamper", "reflectivity");
+    mShaderProgram.loadUseFakeLighting(texture.mUseFakeLighting, "useFakeLighting");
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, model.mModelTexture.mTextureID);
   }
   
   void unbindTexturedModel(const TexturedModel& model) {
+    enableCulling();
     auto rawModel = model.mRawModel;
     for (auto att : rawModel.mAttributes) {
       glDisableVertexAttribArray(att);
@@ -87,6 +93,15 @@ public:
     modelMatrix = glm::rotate(modelMatrix, entity->mRotationAngle, entity->mRotation);
     modelMatrix = glm::scale(modelMatrix, entity->mScale);
     mShaderProgram.loadModelMatrix(modelMatrix, "modelMatrix");
+  }
+  
+  void enableCulling() {
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+  }
+  
+  void disableCulling() {
+    glDisable(GL_CULL_FACE);
   }
 };
 

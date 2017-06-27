@@ -50,9 +50,9 @@ public:
     mTerrainRenderer.mShaderProgram = mTerrainShader;
     
     glfwGetFramebufferSize(mWindowHdl, &mRenderWidth, &mRenderHeight);
+    mProjectionMatrix = createProjectionMatrix(mRenderWidth, mRenderHeight);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    mProjectionMatrix = createProjectionMatrix(mRenderWidth, mRenderHeight);
     mEntityRenderer.init(mProjectionMatrix);
     mTerrainRenderer.init(mProjectionMatrix);
   }

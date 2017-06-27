@@ -60,6 +60,7 @@ StaticShader loadShaders() {
   shaderProgram.registerUniform("shineDamper");
   shaderProgram.registerUniform("reflectivity");
   shaderProgram.registerUniform("ambientFactor");
+  shaderProgram.registerUniform("useFakeLighting");
   
   return shaderProgram;
 }
@@ -112,7 +113,7 @@ int main(int argc, const char * argv[]) {
   
   StaticShader shaderProgram = loadShaders();
   TerrainShader terrainShader = loadTerrainShader();
-  glm::vec3 lightPos{100.0f, 0.0f, -400.0f};
+  glm::vec3 lightPos{10.0f, 50.0f, -100.0f};
   glm::vec3 lightCol{1.0f, 1.0f, 1.0f};
   Light light{lightPos, lightCol};
   
@@ -125,19 +126,44 @@ int main(int argc, const char * argv[]) {
   masterRenderer.init();
   
   RawModel model = objLoader.loadObjModel("resources/meshes/dragon.obj", loader);
+  RawModel fern = objLoader.loadObjModel("resources/meshes/fern.obj", loader);
+  RawModel grass = objLoader.loadObjModel("resources/meshes/grassModel.obj", loader);
+
   ModelTexture modelTexture{loader.loadTexture("resources/textures/scales.png")};
+  ModelTexture fernTexture{loader.loadTexture("resources/textures/fern.png")};
+  ModelTexture grassTexture{loader.loadTexture("resources/textures/grassTexture.png")};
+
   modelTexture.mShineDamper = 0.5f;
   modelTexture.mReflectivity = 1.0f;
+  
+  fernTexture.mShineDamper = 10.0f;
+  fernTexture.mReflectivity = 1.0f;
+  fernTexture.mHasTransparency = true;
+  
+  grassTexture.mShineDamper = 10.0f;
+  grassTexture.mReflectivity = 1.0f;
+  grassTexture.mHasTransparency = true;
+  grassTexture.mUseFakeLighting = true;
+  
   TexturedModel texturedModel{model, modelTexture, TexturedModelType::DRAGON};
+  TexturedModel fernTexturedModel{fern, fernTexture, TexturedModelType::FERN};
+  TexturedModel grassTexturedModel{grass, grassTexture, TexturedModelType::GRASS};
+  
   std::shared_ptr<Entity> entity = std::make_shared<Entity>(texturedModel, glm::vec3{50.0f, 0.0f, -30.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
+  std::shared_ptr<Entity> fernEntity = std::make_shared<Entity>(fernTexturedModel, glm::vec3{75.0f, 0.0f, -25.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
+  std::shared_ptr<Entity> grassEntity = std::make_shared<Entity>(grassTexturedModel, glm::vec3{25.0f, 0.0f, -25.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
   
   ModelTexture terrainTexture{loader.loadTexture("resources/textures/grass.png")};
-  terrainTexture.mShineDamper = 0.5f;
+  terrainTexture.mShineDamper = 0.0f;
   terrainTexture.mReflectivity = 1.0f;
   Terrain terrain{0, -1, loader, terrainTexture};
   
   masterRenderer.addTexturedModel(texturedModel);
+  masterRenderer.addTexturedModel(fernTexturedModel);
+  masterRenderer.addTexturedModel(grassTexturedModel);
   masterRenderer.addEntity(entity, TexturedModelType::DRAGON);
+  masterRenderer.addEntity(fernEntity, TexturedModelType::FERN);
+  masterRenderer.addEntity(grassEntity, TexturedModelType::GRASS);
   masterRenderer.addTerrain(terrain);
   
   while (!glfwWindowShouldClose(window)) {
