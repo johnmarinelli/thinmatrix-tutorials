@@ -1,22 +1,15 @@
-#ifndef TerrainShader_hpp
-#define TerrainShader_hpp
+#ifndef StaticShader_hpp
+#define StaticShader_hpp
 
 #include <stdio.h>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <map>
-#include <OpenGL/gl3.h>
-#include <glm/gtc/type_ptr.hpp>
 
-#include "Light.hpp"
 #include "ShaderProgram.hpp"
 
-class TerrainShader : public ShaderProgram {
+class StaticShader : public ShaderProgram {
 public:
   
-  TerrainShader() :
-    ShaderProgram() {
+  StaticShader() :
+    ShaderProgram() {    
   }
   
   void loadLight(const Light& light, const std::string& posName, const std::string& colName) {
@@ -55,9 +48,9 @@ public:
   void loadModelMatrix(const glm::mat4& modelMatrix, const std::string& modelMatrixName) {
     auto modelMatrixLocation = mUniforms[modelMatrixName];
     
-    glUniformMatrix4fv(modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
-    
+    glUniformMatrix4fv(modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));    
   }
+
 };
 
 #endif

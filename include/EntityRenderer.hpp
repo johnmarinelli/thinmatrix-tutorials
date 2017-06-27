@@ -10,14 +10,14 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Entity.hpp"
-#include "ShaderProgram.hpp"
+#include "StaticShader.hpp"
 #include "Utilities.h"
 #include "Camera.hpp"
 
 class EntityRenderer {
 public:
   GLFWwindow* mWindowHdl;
-  ShaderProgram mShaderProgram;
+  StaticShader mShaderProgram;
   Camera mCamera;
   glm::mat4 mProjectionMatrix;
   
@@ -27,7 +27,7 @@ public:
     mWindowHdl(nullptr) {
   }
   
-  EntityRenderer(GLFWwindow* window, const ShaderProgram& program) :
+  EntityRenderer(GLFWwindow* window, const StaticShader& program) :
     mWindowHdl(window),
     mShaderProgram(program) {
   }
@@ -83,9 +83,9 @@ public:
   
   void prepareInstance(std::shared_ptr<Entity> entity) {
     glm::mat4 modelMatrix{1.0f};
-    modelMatrix = glm::scale(modelMatrix, entity->mScale);
-    modelMatrix = glm::rotate(modelMatrix, entity->mRotationAngle, entity->mRotation);
     modelMatrix = glm::translate(modelMatrix, entity->mPosition);
+    modelMatrix = glm::rotate(modelMatrix, entity->mRotationAngle, entity->mRotation);
+    modelMatrix = glm::scale(modelMatrix, entity->mScale);
     mShaderProgram.loadModelMatrix(modelMatrix, "modelMatrix");
   }
 };

@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <map>
 
-#include "ShaderProgram.hpp"
+#include "StaticShader.hpp"
 #include "EntityRenderer.hpp"
 #include "TerrainShader.hpp"
 #include "TerrainRenderer.hpp"
@@ -15,9 +15,9 @@
 
 class MasterRenderer {
 public:
-  ShaderProgram mShaderProgram;
+  StaticShader mShaderProgram;
   TerrainShader mTerrainShader;
-  EntityRenderer mRenderer;
+  EntityRenderer mEntityRenderer;
   TerrainRenderer mTerrainRenderer;
   
   std::vector<Terrain> mTerrains;
@@ -31,21 +31,21 @@ public:
     mShaderProgram(),
     mTerrainShader(),
     mWindowHdl(nullptr),
-    mRenderer(),
+    mEntityRenderer(),
     mTerrainRenderer() {
   }
   
-  MasterRenderer(GLFWwindow* window, const ShaderProgram& program, const TerrainShader& terrainShader) :
+  MasterRenderer(GLFWwindow* window, const StaticShader& program, const TerrainShader& terrainShader) :
     mShaderProgram(program),
     mTerrainShader(terrainShader),
     mWindowHdl(window),
-    mRenderer(window, program),
+    mEntityRenderer(window, program),
     mTerrainRenderer(window, terrainShader) {
   }
   
   void init() {
-    mRenderer.mWindowHdl = mWindowHdl;
-    mRenderer.mShaderProgram = mShaderProgram;
+    mEntityRenderer.mWindowHdl = mWindowHdl;
+    mEntityRenderer.mShaderProgram = mShaderProgram;
     mTerrainRenderer.mWindowHdl = mWindowHdl;
     mTerrainRenderer.mShaderProgram = mTerrainShader;
     
@@ -53,7 +53,7 @@ public:
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     mProjectionMatrix = createProjectionMatrix(mRenderWidth, mRenderHeight);
-    mRenderer.init(mProjectionMatrix);
+    mEntityRenderer.init(mProjectionMatrix);
     mTerrainRenderer.init(mProjectionMatrix);
   }
   
@@ -86,13 +86,13 @@ public:
   void render(const Light& sun) {
     prepare();
     
-    auto viewMatrix = mRenderer.mCamera.createViewMatrix();
+    auto viewMatrix = mEntityRenderer.mCamera.createViewMatrix();
     
     mShaderProgram.use();
     mShaderProgram.loadLight(sun, "lightPosition", "lightColor");
     mShaderProgram.loadAmbientFactor(0.2f, "ambientFactor");
     mShaderProgram.loadViewMatrix(viewMatrix, "viewMatrix");
-    mRenderer.render(mEntities);
+    mEntityRenderer.render(mEntities);
     mShaderProgram.disable();
     
     mTerrainShader.use();
@@ -125,7 +125,7 @@ public:
   }
   
   void moveCamera(MovementDirection dir) {
-    mRenderer.mCamera.move(dir);
+    mEntityRenderer.mCamera.move(dir);
   }
   
   void cleanUp() {

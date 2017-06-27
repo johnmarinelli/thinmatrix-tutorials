@@ -48,8 +48,8 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
   }
 }
 
-ShaderProgram loadShaders() {
-  ShaderProgram shaderProgram;
+StaticShader loadShaders() {
+  StaticShader shaderProgram;
   shaderProgram.initFromFiles("resources/shaders/game.vert", "resources/shaders/game.frag");
   
   shaderProgram.registerUniform("projectionMatrix");
@@ -110,9 +110,9 @@ static GLFWwindow* initGLFW() {
 int main(int argc, const char * argv[]) {
   GLFWwindow* window = initGLFW();
   
-  ShaderProgram shaderProgram = loadShaders();
+  StaticShader shaderProgram = loadShaders();
   TerrainShader terrainShader = loadTerrainShader();
-  glm::vec3 lightPos{0.0f, 0.0f, -20.0f};
+  glm::vec3 lightPos{100.0f, 0.0f, -400.0f};
   glm::vec3 lightCol{1.0f, 1.0f, 1.0f};
   Light light{lightPos, lightCol};
   
@@ -129,12 +129,12 @@ int main(int argc, const char * argv[]) {
   modelTexture.mShineDamper = 0.5f;
   modelTexture.mReflectivity = 1.0f;
   TexturedModel texturedModel{model, modelTexture, TexturedModelType::DRAGON};
-  std::shared_ptr<Entity> entity = std::make_shared<Entity>(texturedModel, glm::vec3{0.0f, 0.0f, -15.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
+  std::shared_ptr<Entity> entity = std::make_shared<Entity>(texturedModel, glm::vec3{50.0f, 0.0f, -30.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
   
   ModelTexture terrainTexture{loader.loadTexture("resources/textures/grass.png")};
   terrainTexture.mShineDamper = 0.5f;
   terrainTexture.mReflectivity = 1.0f;
-  Terrain terrain{0, 0, loader, terrainTexture};
+  Terrain terrain{0, -1, loader, terrainTexture};
   
   masterRenderer.addTexturedModel(texturedModel);
   masterRenderer.addEntity(entity, TexturedModelType::DRAGON);
@@ -142,7 +142,7 @@ int main(int argc, const char * argv[]) {
   
   while (!glfwWindowShouldClose(window)) {
     masterRenderer.render(light);
-    entity->mRotationAngle = glfwGetTime() * 0.25;
+    entity->mRotationAngle = glfwGetTime();
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
