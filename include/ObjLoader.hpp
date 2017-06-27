@@ -7,6 +7,9 @@
 #include <fstream>
 #include <iostream>
 
+#include "Vertex.hpp"
+#include "ModelData.hpp"
+#include "Vertex.hpp"
 #include "RawModel.hpp"
 #include "Loader.hpp"
 
@@ -17,11 +20,18 @@ public:
   std::vector<GLfloat> mTexturesVector;
   std::vector<GLuint> mIndicesVector;
   
-  RawModel loadObjModel(const std::string& filename, Loader& loader) {
+  ModelData loadObj(const std::string& filename) {
     std::ifstream file(filename.c_str());
     
-    std::vector<glm::vec3> vertices, normals;
+    std::vector<Vertex> vertices;
+    std::vector<GLfloat> verticesFlattened;
+    
     std::vector<glm::vec2> textures;
+    std::vector<GLfloat> texturesFlattened;
+    
+    std::vector<glm::vec3> normals;
+    std::vector<GLfloat> normalsFlattened;
+    
     std::vector<GLuint> indices;
     
     std::string lineBeforeBreak;
@@ -31,9 +41,9 @@ public:
       std::getline(file, line);
       
       std::vector<std::string> currentLine = splitLineBySpace(line);
-      
       if (lineStartsWith(line, "v ")) {
-        glm::vec3 vtx = parseTriplet(currentLine);
+        int index = (int) vertices.size();
+        Vertex vtx{index, parseTriplet(currentLine)};
         vertices.push_back(vtx);
       }
       else if (lineStartsWith(line, "vt ")) {
@@ -58,28 +68,13 @@ public:
     
     // process last line before break
     std::vector<std::string> currentLine = splitLineBySpace(lineBeforeBreak);
-    
-    mVerticesVector.resize(vertices.size() * 3);
-    
-    int vertexPointer = 0;
-    
-    for (auto vtx : vertices) {
-      mVerticesVector[vertexPointer++] = vtx.x;
-      mVerticesVector[vertexPointer++] = vtx.y;
-      mVerticesVector[vertexPointer++] = vtx.z;
-    }
-    
-    // example face structure:
-    // f 41/1/1/ 38/2/1 45/3/1
-    // each triplet: geometric vertex/texture vertex/vertex normal
-    // 3 triplets = 1 face (triangle)
     std::vector<std::string> vtx1Str = splitLine(currentLine[1], '/');
     std::vector<std::string> vtx2Str = splitLine(currentLine[2], '/');
     std::vector<std::string> vtx3Str = splitLine(currentLine[3], '/');
     
-    processVertex(vtx1Str, indices, textures, normals, mTexturesVector, mNormalsVector);
-    processVertex(vtx2Str, indices, textures, normals, mTexturesVector, mNormalsVector);
-    processVertex(vtx3Str, indices, textures, normals, mTexturesVector, mNormalsVector);
+    processVertex(vtx1Str, vertices, indices);
+    processVertex(vtx2Str, vertices, indices);
+    processVertex(vtx3Str, vertices, indices);
     
     for (std::string line; std::getline(file, line); ) {
       if (!lineStartsWith(line, "f ")) {
@@ -91,54 +86,94 @@ public:
       std::vector<std::string> vtx2Str = splitLine(currentLine[2], '/');
       std::vector<std::string> vtx3Str = splitLine(currentLine[3], '/');
       
-      processVertex(vtx1Str, indices, textures, normals, mTexturesVector, mNormalsVector);
-      processVertex(vtx2Str, indices, textures, normals, mTexturesVector, mNormalsVector);
-      processVertex(vtx3Str, indices, textures, normals, mTexturesVector, mNormalsVector);
+      processVertex(vtx1Str, vertices, indices);
+      processVertex(vtx2Str, vertices, indices);
+      processVertex(vtx3Str, vertices, indices);
     }
     
     file.close();
+    removeUnusedVertices(vertices);
     
-    mIndicesVector.resize(indices.size());
+    verticesFlattened.resize(vertices.size() * 3);
+    texturesFlattened.resize(vertices.size() * 2);
+    normalsFlattened.resize(vertices.size() * 3);
     
-    for (auto i = 0; i < indices.size(); ++i) {
-      mIndicesVector[i] = indices.at(i);
+    for (auto i = 0; i < vertices.size(); ++i) {
+      auto vertex = vertices[i];
+      auto position = vertex.mPosition;
+      auto texCoord = textures[vertex.mTextureIndex];
+      auto normal = normals[vertex.mNormalIndex];
+      
+      verticesFlattened[i * 3] = position.x;
+      verticesFlattened[i * 3 + 1] = position.y;
+      verticesFlattened[i * 3 + 2] = position.z;
+      
+      texturesFlattened[i * 2] = texCoord.x;
+      texturesFlattened[i * 2 + 1] = texCoord.y;
+      
+      normalsFlattened[i * 3] = normal.x;
+      normalsFlattened[i * 3 + 1] = normal.y;
+      normalsFlattened[i * 3 + 2] = normal.z;
     }
+    
+    float furthest = findFurthestPoint(vertices);
+    
+    return ModelData{verticesFlattened, texturesFlattened, normalsFlattened, indices, furthest};
+  }
 
-    vertices.clear();
-    textures.clear();
-    normals.clear();
-    indices.clear();
-    std::vector<GLuint>{}.swap(indices);
-    std::vector<glm::vec3>{}.swap(vertices);
-    std::vector<glm::vec2>{}.swap(textures);
-    std::vector<glm::vec3>{}.swap(normals);
-    
-    RawModel model = loader.loadToVAO((GLfloat*) &mVerticesVector[0],
-                                      (GLuint*) &mIndicesVector[0],
-                                      (GLfloat*) &mTexturesVector[0],
-                                      (GLfloat*) &mNormalsVector[0],
-                                      (GLuint) mVerticesVector.size(),
-                                      (GLuint) mIndicesVector.size(),
-                                      (GLuint) mTexturesVector.size(),
-                                      (GLuint) mNormalsVector.size());
-    
-    return model;
+  
+  float findFurthestPoint(const std::vector<Vertex>& vertices) {
+    float furthestPoint = std::numeric_limits<float>::min();
+    for (auto v : vertices) {
+      if (v.mLength > furthestPoint) furthestPoint = v.mLength;
+    }
+    return furthestPoint;
   }
   
-  void processVertex(const std::vector<std::string>& vtxData, std::vector<GLuint>& indices,
-                     std::vector<glm::vec2>& textures, std::vector<glm::vec3>& normals,
-                     std::vector<GLfloat>& textureArray, std::vector<GLfloat>& normalsArray) {
-    int currentVertexPointer = std::atoi(vtxData[0].c_str()) - 1;
-    indices.push_back(currentVertexPointer);
+  void processVertex(const std::vector<std::string>& vtxData, std::vector<Vertex>& vertices, std::vector<GLuint>& indices) {
+    GLuint currentVertexIndex = (GLuint) std::atoi(vtxData[0].c_str()) - 1;
+    GLuint currentTextureIndex = (GLuint) std::atoi(vtxData[1].c_str()) - 1;
+    GLuint currentNormalIndex = (GLuint) std::atoi(vtxData[2].c_str()) - 1;
     
-    glm::vec2 currentTex = textures.at(std::atoi(vtxData[1].c_str()) - 1);
-    textureArray[currentVertexPointer * 2] = currentTex.x;
-    textureArray[currentVertexPointer * 2 + 1] = currentTex.y; //1.0 - currentTex.y;
+    Vertex* currentVertex = &vertices.at(currentVertexIndex);
     
-    glm::vec3 currentNorm = normals.at(std::atoi(vtxData[2].c_str()) - 1);
-    normalsArray[currentVertexPointer * 3] = currentNorm.x;
-    normalsArray[currentVertexPointer * 3 + 1] = currentNorm.y;
-    normalsArray[currentVertexPointer * 3 + 2] = currentNorm.z;
+    if (!currentVertex->isSet()) {
+      currentVertex->mTextureIndex = currentTextureIndex;
+      currentVertex->mNormalIndex = currentNormalIndex;
+      indices.push_back(currentVertexIndex);
+    }
+    else {
+      handleProcessedVertex(currentVertex, currentTextureIndex, currentNormalIndex, indices, vertices);
+    }
+  }
+  
+  void handleProcessedVertex(Vertex* previousVertex, GLuint newTextureIndex, GLuint newNormalIndex, std::vector<GLuint>& indices, std::vector<Vertex>& vertices) {
+    if (previousVertex->hasSameTextureAndNormal(newTextureIndex, newNormalIndex)) {
+      indices.push_back(previousVertex->mIndex);
+    }
+    else {
+      std::shared_ptr<Vertex> anotherVertex = previousVertex->mDuplicate;
+      if (nullptr != anotherVertex) {
+        handleProcessedVertex(anotherVertex.get(), newTextureIndex, newNormalIndex, indices, vertices);
+      }
+      else {
+        std::shared_ptr<Vertex> duplicateVertex = std::make_shared<Vertex>(vertices.size(), previousVertex->mPosition);
+        duplicateVertex->mTextureIndex = newTextureIndex;
+        duplicateVertex->mNormalIndex = newNormalIndex;
+        previousVertex->mDuplicate = duplicateVertex;
+        vertices.push_back(*duplicateVertex);
+        indices.push_back(duplicateVertex->mIndex);
+      }
+    }
+  }
+  
+  void removeUnusedVertices(std::vector<Vertex>& vertices) {
+    for (auto v : vertices) {
+      if (!v.isSet()) {
+        v.mTextureIndex = 0;
+        v.mNormalIndex = 0;
+      }
+    }
   }
   
   std::string readObjFile(const std::string& filename) {

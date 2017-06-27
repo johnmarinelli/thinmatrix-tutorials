@@ -19,6 +19,10 @@ out vec2 texCoord;
 out vec3 worldNormal;
 out vec3 toLightDir;
 out vec3 cameraDir;
+out float visibility;
+
+const float fogDensity = 0.007;
+const float fogGradient = 1.5;
 
 void main(void) {
   vec3 actualNormal = vNormal;
@@ -36,6 +40,11 @@ void main(void) {
   // view matrix contains inverse of camera's location
   vec3 cameraPos = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
   cameraDir = cameraPos - worldPosition.xyz;
+  
+  vec4 positionRelativeToCamera = viewMatrix * worldPosition;
+  float dis = length(positionRelativeToCamera.xyz);
+  visibility = exp(-pow((dis * fogDensity), fogGradient));
+  visibility = clamp(visibility, 0.0, 1.0);
   
   gl_Position = projectionMatrix * viewMatrix * worldPosition;
 }

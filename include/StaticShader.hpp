@@ -18,6 +18,12 @@ public:
     glUniform1f(useFakeLightingLocation, useFake ? 1.0 : 0.0);
   }
   
+  void loadSkyColor(const glm::vec3& skyColor, const std::string& skyColorName) {
+    auto skyColorLocation = mUniforms[skyColorName];
+    
+    glUniform3f(skyColorLocation, skyColor.r, skyColor.g, skyColor.b);
+  }
+  
   void loadLight(const Light& light, const std::string& posName, const std::string& colName) {
     auto lightPosLocation = mUniforms[posName],
     lightColLocation = mUniforms[colName];

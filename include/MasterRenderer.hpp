@@ -25,6 +25,8 @@ public:
   glm::mat4 mProjectionMatrix;
   int mRenderWidth, mRenderHeight;
   
+  glm::vec3 mSkyColor;
+  
   std::map<TexturedModelType, std::pair<TexturedModel, std::vector<std::shared_ptr<Entity>>>> mEntities;
   
   MasterRenderer() :
@@ -32,7 +34,8 @@ public:
     mTerrainShader(),
     mWindowHdl(nullptr),
     mEntityRenderer(),
-    mTerrainRenderer() {
+    mTerrainRenderer(),
+    mSkyColor(glm::vec3{0.5f, 0.5f, 0.5f}) {
   }
   
   MasterRenderer(GLFWwindow* window, const StaticShader& program, const TerrainShader& terrainShader) :
@@ -40,7 +43,8 @@ public:
     mTerrainShader(terrainShader),
     mWindowHdl(window),
     mEntityRenderer(window, program),
-    mTerrainRenderer(window, terrainShader) {
+    mTerrainRenderer(window, terrainShader),
+    mSkyColor(glm::vec3{0.5f, 0.5f, 0.5f}) {
   }
   
   void init() {
@@ -92,6 +96,7 @@ public:
     mShaderProgram.loadLight(sun, "lightPosition", "lightColor");
     mShaderProgram.loadAmbientFactor(0.2f, "ambientFactor");
     mShaderProgram.loadViewMatrix(viewMatrix, "viewMatrix");
+    mShaderProgram.loadSkyColor(mSkyColor, "skyColor");
     mEntityRenderer.render(mEntities);
     mShaderProgram.disable();
     
@@ -99,13 +104,15 @@ public:
     mTerrainShader.loadLight(sun, "lightPosition", "lightColor");
     mTerrainShader.loadAmbientFactor(0.2f, "ambientFactor");
     mTerrainShader.loadViewMatrix(viewMatrix, "viewMatrix");
+    mTerrainShader.loadSkyColor(mSkyColor, "skyColor");
+
     mTerrainRenderer.render(mTerrains);
     mTerrainShader.disable();
   }
   
   void prepare() {
     glEnable(GL_DEPTH_TEST);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearColor(mSkyColor.r, mSkyColor.g, mSkyColor.b, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     mShaderProgram.loadProjectionMatrix(mProjectionMatrix, "projectionMatrix");

@@ -6,6 +6,7 @@ in vec3 worldNormal;
 in vec3 toLightDir;
 in vec3 cameraDir;
 out vec4 fragColor;
+in float visibility;
 
 uniform sampler2D textureSampler;
 uniform vec3 lightColor;
@@ -14,6 +15,8 @@ uniform float shineDamper;
 uniform float reflectivity;
 
 uniform float ambientFactor;
+
+uniform vec3 skyColor;
 
 void main(void) { 
   vec3 objColor = vec3(0.25, 0.25, 0.75);
@@ -41,4 +44,5 @@ void main(void) {
   }
   
   fragColor = vec4(light, 1.0) * texColor;
+  fragColor = mix(vec4(skyColor, 1.0), fragColor, visibility);
 }

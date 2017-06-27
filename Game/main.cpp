@@ -61,6 +61,7 @@ StaticShader loadShaders() {
   shaderProgram.registerUniform("reflectivity");
   shaderProgram.registerUniform("ambientFactor");
   shaderProgram.registerUniform("useFakeLighting");
+  shaderProgram.registerUniform("skyColor");
   
   return shaderProgram;
 }
@@ -77,6 +78,7 @@ TerrainShader loadTerrainShader() {
   shaderProgram.registerUniform("shineDamper");
   shaderProgram.registerUniform("reflectivity");
   shaderProgram.registerUniform("ambientFactor");
+  shaderProgram.registerUniform("skyColor");
   
   return shaderProgram;
 }
@@ -113,7 +115,7 @@ int main(int argc, const char * argv[]) {
   
   StaticShader shaderProgram = loadShaders();
   TerrainShader terrainShader = loadTerrainShader();
-  glm::vec3 lightPos{10.0f, 50.0f, -100.0f};
+  glm::vec3 lightPos{10.0f, 50.0f, -400.0f};
   glm::vec3 lightCol{1.0f, 1.0f, 1.0f};
   Light light{lightPos, lightCol};
   
@@ -125,9 +127,17 @@ int main(int argc, const char * argv[]) {
   masterRenderer.mTerrainShader = terrainShader;
   masterRenderer.init();
   
-  RawModel model = objLoader.loadObjModel("resources/meshes/dragon.obj", loader);
+  /*RawModel model = objLoader.loadObjModel("resources/meshes/dragon.obj", loader);
   RawModel fern = objLoader.loadObjModel("resources/meshes/fern.obj", loader);
-  RawModel grass = objLoader.loadObjModel("resources/meshes/grassModel.obj", loader);
+  RawModel grass = objLoader.loadObjModel("resources/meshes/grassModel.obj", loader);*/
+  ModelData dragonData = objLoader.loadObj("resources/meshes/dragon.obj");
+  RawModel dragon = loader.loadToVAO((GLfloat*) &dragonData.mVertices[0], (GLuint*) &dragonData.mIndices[0], (GLfloat*) &dragonData.mTextureCoords[0], (GLfloat*) &dragonData.mNormals[0], dragonData.mVertices.size(), dragonData.mIndices.size(), dragonData.mTextureCoords.size(), dragonData.mNormals.size());
+  
+  ModelData fernData = objLoader.loadObj("resources/meshes/fern.obj");
+  RawModel fern = loader.loadToVAO((GLfloat*) &fernData.mVertices[0], (GLuint*) &fernData.mIndices[0], (GLfloat*) &fernData.mTextureCoords[0], (GLfloat*) &fernData.mNormals[0], fernData.mVertices.size(), fernData.mIndices.size(), fernData.mTextureCoords.size(), fernData.mNormals.size());
+  
+  ModelData grassData = objLoader.loadObj("resources/meshes/grassModel.obj");
+  RawModel grass = loader.loadToVAO((GLfloat*) &grassData.mVertices[0], (GLuint*) &grassData.mIndices[0], (GLfloat*) &grassData.mTextureCoords[0], (GLfloat*) &grassData.mNormals[0], grassData.mVertices.size(), grassData.mIndices.size(), grassData.mTextureCoords.size(), grassData.mNormals.size());
 
   ModelTexture modelTexture{loader.loadTexture("resources/textures/scales.png")};
   ModelTexture fernTexture{loader.loadTexture("resources/textures/fern.png")};
@@ -145,7 +155,7 @@ int main(int argc, const char * argv[]) {
   grassTexture.mHasTransparency = true;
   grassTexture.mUseFakeLighting = true;
   
-  TexturedModel texturedModel{model, modelTexture, TexturedModelType::DRAGON};
+  TexturedModel texturedModel{dragon, modelTexture, TexturedModelType::DRAGON};
   TexturedModel fernTexturedModel{fern, fernTexture, TexturedModelType::FERN};
   TexturedModel grassTexturedModel{grass, grassTexture, TexturedModelType::GRASS};
   

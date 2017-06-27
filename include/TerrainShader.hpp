@@ -27,6 +27,12 @@ public:
     glUniform3f(lightColLocation, light.mColor.r, light.mColor.g, light.mColor.b);
   }
   
+  void loadSkyColor(const glm::vec3& skyColor, const std::string& skyColorName) {
+    auto skyColorLocation = mUniforms[skyColorName];
+    
+    glUniform3f(skyColorLocation, skyColor.r, skyColor.g, skyColor.b);
+  }  
+  
   void loadShineVariables(float shineDamper, float reflectivity, const std::string& damperName, const std::string& refName) {
     auto shineDamperLocation = mUniforms[damperName],
     reflectivityLocation = mUniforms[refName];
