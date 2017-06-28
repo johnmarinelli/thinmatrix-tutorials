@@ -19,6 +19,26 @@ public:
     ShaderProgram() {
   }
   
+  void connectTextureUnits() {
+    loadInt(0, "backgroundTexture");
+    loadInt(1, "rTexture");
+    loadInt(2, "gTexture");
+    loadInt(3, "bTexture");
+    loadInt(4, "blendMap");
+  }
+  
+  void loadInt(GLuint i, const std::string& name) {
+    auto location = mUniforms[name];
+    
+    glUniform1i(location, i);
+  }
+  
+  void loadFloat(GLfloat f, const std::string& name) {
+    auto location = mUniforms[name];
+    
+    glUniform1f(location, f);
+  }
+  
   void loadLight(const Light& light, const std::string& posName, const std::string& colName) {
     auto lightPosLocation = mUniforms[posName],
     lightColLocation = mUniforms[colName];

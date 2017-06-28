@@ -19,6 +19,7 @@
 #include "ObjLoader.hpp"
 #include "Light.hpp"
 #include "Terrain.hpp"
+#include "TerrainTexturePack.hpp"
 
 const int WIDTH = 640;
 const int HEIGHT = 480;
@@ -79,6 +80,11 @@ TerrainShader loadTerrainShader() {
   shaderProgram.registerUniform("reflectivity");
   shaderProgram.registerUniform("ambientFactor");
   shaderProgram.registerUniform("skyColor");
+  shaderProgram.registerUniform("backgroundTexture");
+  shaderProgram.registerUniform("rTexture");
+  shaderProgram.registerUniform("gTexture");
+  shaderProgram.registerUniform("bTexture");
+  shaderProgram.registerUniform("blendMap");
   
   return shaderProgram;
 }
@@ -112,14 +118,24 @@ static GLFWwindow* initGLFW() {
 
 int main(int argc, const char * argv[]) {
   GLFWwindow* window = initGLFW();
+  Loader loader;
+  
+  /*
+   * Terrain textures
+   */
+  GLuint bgTexture = loader.loadTexture("resources/textures/grassy2.png");
+  GLuint rTexture = loader.loadTexture("resources/textures/mud.png");
+  GLuint gTexture = loader.loadTexture("resources/textures/grassFlowers.png");
+  GLuint bTexture = loader.loadTexture("resources/textures/path.png");
+  GLuint blendMap = loader.loadTexture("resources/textures/blendMap.png");
+  
+  TerrainTexturePack texturePack{bgTexture, rTexture, gTexture, bTexture};
   
   StaticShader shaderProgram = loadShaders();
   TerrainShader terrainShader = loadTerrainShader();
-  glm::vec3 lightPos{10.0f, 50.0f, -400.0f};
+  glm::vec3 lightPos{10.0f, 5000.0f, -400.0f};
   glm::vec3 lightCol{1.0f, 1.0f, 1.0f};
   Light light{lightPos, lightCol};
-  
-  Loader loader;
   
   ObjLoader objLoader;
   masterRenderer.mWindowHdl = window;
@@ -140,7 +156,7 @@ int main(int argc, const char * argv[]) {
   ModelTexture fernTexture{loader.loadTexture("resources/textures/fern.png")};
   ModelTexture grassTexture{loader.loadTexture("resources/textures/grassTexture.png")};
 
-  modelTexture.mShineDamper = 0.5f;
+  modelTexture.mShineDamper = 10.0f;
   modelTexture.mReflectivity = 1.0f;
   
   fernTexture.mShineDamper = 10.0f;
@@ -161,11 +177,11 @@ int main(int argc, const char * argv[]) {
   std::shared_ptr<Entity> grassEntity = std::make_shared<Entity>(grassTexturedModel, glm::vec3{25.0f, 0.0f, -25.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
   
   ModelTexture terrainTexture{loader.loadTexture("resources/textures/grassy2.png")};
-  terrainTexture.mShineDamper = 0.0f;
+  terrainTexture.mShineDamper = 10.0f;
   terrainTexture.mReflectivity = 1.0f;
   
-  Terrain terrain{0, -1, loader, terrainTexture};
-  Terrain terrain2{0, 0, loader, terrainTexture};
+  Terrain terrain{0, -1, loader, texturePack, blendMap};
+  Terrain terrain2{0, 0, loader, texturePack, blendMap};
   
   masterRenderer.addTexturedModel(texturedModel);
   masterRenderer.addTexturedModel(fernTexturedModel);

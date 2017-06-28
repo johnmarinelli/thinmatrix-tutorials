@@ -35,6 +35,7 @@ public:
     mProjectionMatrix = projMatrix;
     mShaderProgram.use();
     mShaderProgram.loadProjectionMatrix(mProjectionMatrix, "projectionMatrix");
+    mShaderProgram.connectTextureUnits();
     mShaderProgram.disable();
   }
   
@@ -49,7 +50,6 @@ public:
   
   void prepareTerrain(const Terrain& model) {
     auto rawModel = model.mRawModel;
-    auto texture = model.mModelTexture;
     
     glBindVertexArray(rawModel.mVaoID);
     
@@ -57,9 +57,31 @@ public:
       glEnableVertexAttribArray(att);
     }
     
-    mShaderProgram.loadShineVariables(texture.mShineDamper, texture.mReflectivity, "shineDamper", "reflectivity");
+    //glActiveTexture(GL_TEXTURE0);
+    //glBindTexture(GL_TEXTURE_2D, model.mModelTexture.mTextureID);
+    bindTextures(model);
+    mShaderProgram.loadShineVariables(10.0f, 1.0f, "shineDamper", "reflectivity");
+  }
+  
+  void bindTextures(const Terrain& terrain) {
+    auto pack = terrain.mTerrainTexturePack;
+    
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, model.mModelTexture.mTextureID);
+    glBindTexture(GL_TEXTURE_2D, pack.mBackgroundTexture.mTextureID);
+    
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, pack.mRTexture.mTextureID);
+    
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, pack.mGTexture.mTextureID);
+    
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, pack.mBTexture.mTextureID);
+    
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, terrain.mBlendMap.mTextureID);
+      
+
   }
   
   void unbindTexturedModel(const Terrain& model) {

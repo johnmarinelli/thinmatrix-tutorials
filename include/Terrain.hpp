@@ -6,7 +6,7 @@
 
 #include "Loader.hpp"
 #include "RawModel.hpp"
-#include "ModelTexture.hpp"
+#include "TerrainTexturePack.hpp"
 
 class Terrain {
 public:
@@ -21,10 +21,12 @@ public:
   float mX, mZ;
   
   RawModel mRawModel;
-  ModelTexture mModelTexture;
+  TerrainTexturePack mTerrainTexturePack;
+  TerrainTexture mBlendMap;
   
-  Terrain(int gridX, int gridZ, Loader& loader, const ModelTexture& texture) :
-    mModelTexture(texture),
+  Terrain(int gridX, int gridZ, Loader& loader, const TerrainTexturePack& texturePack, const TerrainTexture& blendMap) :
+    mTerrainTexturePack(texturePack),
+    mBlendMap(blendMap),
     mX(gridX * SIZE),
     mZ(gridZ * SIZE),
     mRawModel(generateTerrain(loader)) {

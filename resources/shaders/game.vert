@@ -22,7 +22,7 @@ out vec3 cameraDir;
 out float visibility;
 
 const float fogDensity = 0.007;
-const float fogGradient = 1.5;
+const float fogGradient = 5.0;
 
 void main(void) {
   vec3 actualNormal = vNormal;

@@ -18,7 +18,13 @@ uniform float ambientFactor;
 
 uniform vec3 skyColor;
 
-void main(void) { 
+void main(void) {
+  vec4 texColor = texture(textureSampler, texCoord);
+  
+  if (texColor.a < 0.5) {
+    discard;
+  }
+  
   vec3 unitNormal = normalize(worldNormal);
   vec3 unitToLightDir = normalize(toLightDir);
   
@@ -33,15 +39,7 @@ void main(void) {
   float ndot = dot(unitNormal, unitToLightDir);
   float brightness = max(ndot, ambientFactor);
   vec3 diffuse = brightness * lightColor;
-  
-  vec3 light = diffuse + specular;
 
-  vec4 texColor = texture(textureSampler, texCoord);
-  
-  if (texColor.a < 0.5) {
-    discard;
-  }
-  
-  fragColor = vec4(light, 1.0) * texColor;
+  fragColor = vec4(diffuse, 1.0) * texColor + vec4(specular, 1.0);
   fragColor = mix(vec4(skyColor, 1.0), fragColor, visibility);
 }
