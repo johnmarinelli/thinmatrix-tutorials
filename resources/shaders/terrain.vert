@@ -25,7 +25,7 @@ const float fogGradient = 5.0;
 void main(void) { 
   vec4 worldPosition = modelMatrix * vec4(vPos, 1.0);
   
-  texCoord = vTexCoord;
+  texCoord = vTexCoord * 40.0;
   worldNormal = (modelMatrix * vec4(vNormal, 0.0)).xyz;
   toLightDir = lightPosition - worldPosition.xyz;
   

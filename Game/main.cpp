@@ -127,9 +127,6 @@ int main(int argc, const char * argv[]) {
   masterRenderer.mTerrainShader = terrainShader;
   masterRenderer.init();
   
-  /*RawModel model = objLoader.loadObjModel("resources/meshes/dragon.obj", loader);
-  RawModel fern = objLoader.loadObjModel("resources/meshes/fern.obj", loader);
-  RawModel grass = objLoader.loadObjModel("resources/meshes/grassModel.obj", loader);*/
   ModelData dragonData = objLoader.loadObj("resources/meshes/dragon.obj");
   RawModel dragon = loader.loadToVAO((GLfloat*) &dragonData.mVertices[0], (GLuint*) &dragonData.mIndices[0], (GLfloat*) &dragonData.mTextureCoords[0], (GLfloat*) &dragonData.mNormals[0], dragonData.mVertices.size(), dragonData.mIndices.size(), dragonData.mTextureCoords.size(), dragonData.mNormals.size());
   
@@ -163,10 +160,12 @@ int main(int argc, const char * argv[]) {
   std::shared_ptr<Entity> fernEntity = std::make_shared<Entity>(fernTexturedModel, glm::vec3{75.0f, 0.0f, -25.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
   std::shared_ptr<Entity> grassEntity = std::make_shared<Entity>(grassTexturedModel, glm::vec3{25.0f, 0.0f, -25.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
   
-  ModelTexture terrainTexture{loader.loadTexture("resources/textures/grass.png")};
+  ModelTexture terrainTexture{loader.loadTexture("resources/textures/grassy2.png")};
   terrainTexture.mShineDamper = 0.0f;
   terrainTexture.mReflectivity = 1.0f;
+  
   Terrain terrain{0, -1, loader, terrainTexture};
+  Terrain terrain2{0, 0, loader, terrainTexture};
   
   masterRenderer.addTexturedModel(texturedModel);
   masterRenderer.addTexturedModel(fernTexturedModel);
@@ -175,6 +174,7 @@ int main(int argc, const char * argv[]) {
   masterRenderer.addEntity(fernEntity, TexturedModelType::FERN);
   masterRenderer.addEntity(grassEntity, TexturedModelType::GRASS);
   masterRenderer.addTerrain(terrain);
+  masterRenderer.addTerrain(terrain2);
   
   while (!glfwWindowShouldClose(window)) {
     masterRenderer.render(light);

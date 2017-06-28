@@ -18,7 +18,6 @@ uniform float ambientFactor;
 uniform vec3 skyColor;
 
 void main(void) { 
-  vec3 objColor = vec3(0.25, 0.25, 0.75);
   vec3 unitNormal = normalize(worldNormal);
   vec3 unitToLightDir = normalize(toLightDir);
   

@@ -42,14 +42,14 @@ public:
     
     for (auto i = 0; i < VERTEX_COUNT; ++i) {
       for (auto j = 0; j < VERTEX_COUNT; ++j) {
-        mVertices[vertexPointer*3] = (float)j/((float)VERTEX_COUNT - 1) * SIZE;
+        mVertices[vertexPointer*3] = (float)j/((float)VERTEX_COUNT - 1.0f) * SIZE;
         mVertices[vertexPointer*3+1] = 0;
-        mVertices[vertexPointer*3+2] = (float)i/((float)VERTEX_COUNT - 1) * SIZE;
+        mVertices[vertexPointer*3+2] = (float)i/((float)VERTEX_COUNT - 1.0f) * SIZE;
         mNormals[vertexPointer*3] = 0;
         mNormals[vertexPointer*3+1] = 1;
         mNormals[vertexPointer*3+2] = 0;
-        mTexCoords[vertexPointer*2] = (float)j/((float)VERTEX_COUNT - 1);
-        mTexCoords[vertexPointer*2+1] = (float)i/((float)VERTEX_COUNT - 1);
+        mTexCoords[vertexPointer*2] = (float)j/((float)VERTEX_COUNT - 1.0f);
+        mTexCoords[vertexPointer*2+1] = (float)i/((float)VERTEX_COUNT - 1.0f);
         vertexPointer++;
       }
     }
