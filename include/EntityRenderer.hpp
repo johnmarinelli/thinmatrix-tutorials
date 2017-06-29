@@ -39,10 +39,6 @@ public:
     mShaderProgram.disable();
   }
   
-  void moveCamera(MovementDirection dir) {
-    mCamera.move(dir);
-  }
-  
   void render(const TexturedEntityMap& entities) {
     for (auto kv : entities) {
       auto pair = kv.second;
@@ -90,7 +86,7 @@ public:
   void prepareInstance(std::shared_ptr<Entity> entity) {
     glm::mat4 modelMatrix{1.0f};
     modelMatrix = glm::translate(modelMatrix, entity->mPosition);
-    modelMatrix = glm::rotate(modelMatrix, entity->mRotationAngle, entity->mRotation);
+    modelMatrix = glm::rotate(modelMatrix, toRadians(entity->mRotationAngle), entity->mRotation);
     modelMatrix = glm::scale(modelMatrix, entity->mScale);
     mShaderProgram.loadModelMatrix(modelMatrix, "modelMatrix");
   }

@@ -3,7 +3,6 @@
 #include <OpenGL/gl.h>
 #include <OpenGl/glu.h>
 #include <GLFW/glfw3.h>
-#include <GLUT/glut.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -18,34 +17,85 @@
 #include "Entity.hpp"
 #include "ObjLoader.hpp"
 #include "Light.hpp"
+#include "Player.hpp"
 #include "Terrain.hpp"
 #include "TerrainTexturePack.hpp"
+#include "Timer.hpp"
 
 const int WIDTH = 640;
 const int HEIGHT = 480;
 
+std::shared_ptr<Player> player;
 MasterRenderer masterRenderer;
+double lastMouseXPosition = -1.0;
+double lastMouseYPosition = -1.0;
+bool leftMouseButtonDown = false;
+bool rightMouseButtonDown = false;
 
 static void errorCallback(int err, const char* desc) {
   fprintf(stderr, "Error: %s\n", desc);
 }
 
+static void scrollCallback(GLFWwindow* window, double xOffset, double yOffset) {
+  masterRenderer.mEntityRenderer.mCamera.zoom(yOffset);
+}
+
+static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+  if (GLFW_MOUSE_BUTTON_RIGHT == button) {
+    if (GLFW_PRESS == action) rightMouseButtonDown = true;
+    if (GLFW_RELEASE == action) rightMouseButtonDown = false;
+  }
+  if (GLFW_MOUSE_BUTTON_LEFT == button) {
+    if (GLFW_PRESS == action) leftMouseButtonDown = true;
+    if (GLFW_RELEASE == action) leftMouseButtonDown = false;
+  }
+}
+
+static void cursorPositionCallback(GLFWwindow* window, double xpos, double ypos) {
+  if (leftMouseButtonDown || rightMouseButtonDown) {    
+    double xPos, yPos;
+    glfwGetCursorPos(window, &xPos, &yPos);
+
+    if (lastMouseYPosition == -1 && lastMouseXPosition == -1) {
+      lastMouseXPosition = xPos;
+      lastMouseYPosition = yPos;
+    }
+    
+    double xd = lastMouseXPosition - xPos;
+    double yd = lastMouseYPosition - yPos;
+    
+    if (leftMouseButtonDown) masterRenderer.mEntityRenderer.mCamera.rotate(xd);
+    if (rightMouseButtonDown) masterRenderer.mEntityRenderer.mCamera.moveVertical(yd);
+    
+    lastMouseXPosition = xPos;
+    lastMouseYPosition = yPos;
+  }
+}
+
 static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) glfwSetWindowShouldClose(window, GLFW_TRUE);
   
-  if (GLFW_PRESS == action || GLFW_REPEAT == action) {
-    if (GLFW_KEY_W == key) {
-      masterRenderer.moveCamera(MovementDirection::UP);
-    }
-    else if(GLFW_KEY_D == key) {
-      masterRenderer.moveCamera(MovementDirection::RIGHT);
-    }
-    else if (GLFW_KEY_A == key) {
-      masterRenderer.moveCamera(MovementDirection::LEFT);
-    }
-    else if (GLFW_KEY_S == key) {
-      masterRenderer.moveCamera(MovementDirection::DOWN);
-    }
+  switch (key) {
+    case GLFW_KEY_W:
+      if (action == GLFW_PRESS) player->handleInput(PlayerMovementDirection::UP, GLFW_PRESS);
+      if (action == GLFW_RELEASE) player->handleInput(PlayerMovementDirection::UP, GLFW_RELEASE);
+      break;
+    case GLFW_KEY_S:
+      if (action == GLFW_PRESS) player->handleInput(PlayerMovementDirection::DOWN, GLFW_PRESS);
+      if (action == GLFW_RELEASE) player->handleInput(PlayerMovementDirection::DOWN, GLFW_RELEASE);
+      break;
+    case GLFW_KEY_A:
+      if (action == GLFW_PRESS) player->handleInput(PlayerMovementDirection::LEFT, GLFW_PRESS);
+      if (action == GLFW_RELEASE) player->handleInput(PlayerMovementDirection::LEFT, GLFW_RELEASE);
+      break;
+    case GLFW_KEY_D:
+      if (action == GLFW_PRESS) player->handleInput(PlayerMovementDirection::RIGHT, GLFW_PRESS);
+      if (action == GLFW_RELEASE) player->handleInput(PlayerMovementDirection::RIGHT, GLFW_RELEASE);
+      break;
+    case GLFW_KEY_SPACE:
+      if (action == GLFW_PRESS) player->handleInput(PlayerMovementDirection::JUMP, GLFW_PRESS);
+      break;
+    default: break;
   }
 }
 
@@ -107,7 +157,12 @@ static GLFWwindow* initGLFW() {
     exit(EXIT_FAILURE);
   }
   
+  glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, 1);
+  glfwSetInputMode(window, GLFW_STICKY_KEYS, 1);
   glfwSetKeyCallback(window, keyCallback);
+  glfwSetScrollCallback(window, scrollCallback);
+  glfwSetMouseButtonCallback(window, mouseButtonCallback);
+  glfwSetCursorPosCallback(window, cursorPositionCallback);
   
   glfwMakeContextCurrent(window);
   
@@ -116,8 +171,64 @@ static GLFWwindow* initGLFW() {
   return window;
 }
 
+RawModel loadModel(const std::string& filepath, ObjLoader& objLoader, Loader& loader) {
+  ModelData data = objLoader.loadObj(filepath);
+  RawModel model = loader.loadToVAO((GLfloat*) &data.mVertices[0], (GLuint*) &data.mIndices[0], (GLfloat*) &data.mTextureCoords[0], (GLfloat*) &data.mNormals[0], data.mVertices.size(), data.mIndices.size(), data.mTextureCoords.size(), data.mNormals.size());
+  return model;
+}
+
+struct ModelOptions {
+  float mShineDamper;
+  float mReflectivity;
+  bool mHasTransparency;
+  bool mUseFakeLighting;
+  
+  ModelOptions(float shineDamper, float reflectivity, bool hasTransparency, bool useFakeLighting) :
+    mShineDamper(shineDamper),
+    mReflectivity(reflectivity),
+    mHasTransparency(hasTransparency),
+    mUseFakeLighting(useFakeLighting) {
+  }
+};
+
+ModelTexture loadModelTexture(const std::string& filepath, Loader& loader, const ModelOptions& opts) {
+  ModelTexture modelTexture{loader.loadTexture(filepath)};
+  modelTexture.mShineDamper = opts.mShineDamper;
+  modelTexture.mReflectivity = opts.mReflectivity;
+  modelTexture.mHasTransparency = opts.mHasTransparency;
+  modelTexture.mUseFakeLighting = opts.mUseFakeLighting;
+  
+  return modelTexture;
+}
+
+std::shared_ptr<Entity> createEntity(const TexturedModel& texModel, const glm::vec3& pos, const glm::vec3& rot = glm::vec3{0.0f, 1.0f, 0.0f}, float rotAngle = 0.0f, const glm::vec3& scale = glm::vec3{1.0f}) {
+  std::shared_ptr<Entity> entity = std::make_shared<Entity>(texModel, pos, rot, scale);
+  entity->mRotationAngle = rotAngle;
+  return entity;
+}
+
+void registerEntity(const std::shared_ptr<Entity> entity, MasterRenderer& masterRenderer, TexturedModelType texturedModelType) {
+  masterRenderer.addEntity(entity, texturedModelType);
+}
+
+void generateFerns(MasterRenderer& masterRenderer, const TexturedModel& fernTexModel) {
+  int numFerns = 800;
+  
+  for (auto i = 0; i < numFerns; ++i) {
+    auto rx = random(0.0f, 800.0f);
+    auto rz = random(-800.0f, 000.0f);
+    auto pos = glm::vec3{rx, 0.0f, rz};
+    
+    auto fern = createEntity(fernTexModel, pos);
+    registerEntity(fern, masterRenderer, TexturedModelType::FERN);
+  }
+}
+
 int main(int argc, const char * argv[]) {
+  srand(static_cast<unsigned>(time(0)));
+  Timer timer;
   GLFWwindow* window = initGLFW();
+  
   Loader loader;
   
   /*
@@ -143,60 +254,56 @@ int main(int argc, const char * argv[]) {
   masterRenderer.mTerrainShader = terrainShader;
   masterRenderer.init();
   
-  ModelData dragonData = objLoader.loadObj("resources/meshes/dragon.obj");
-  RawModel dragon = loader.loadToVAO((GLfloat*) &dragonData.mVertices[0], (GLuint*) &dragonData.mIndices[0], (GLfloat*) &dragonData.mTextureCoords[0], (GLfloat*) &dragonData.mNormals[0], dragonData.mVertices.size(), dragonData.mIndices.size(), dragonData.mTextureCoords.size(), dragonData.mNormals.size());
-  
-  ModelData fernData = objLoader.loadObj("resources/meshes/fern.obj");
-  RawModel fern = loader.loadToVAO((GLfloat*) &fernData.mVertices[0], (GLuint*) &fernData.mIndices[0], (GLfloat*) &fernData.mTextureCoords[0], (GLfloat*) &fernData.mNormals[0], fernData.mVertices.size(), fernData.mIndices.size(), fernData.mTextureCoords.size(), fernData.mNormals.size());
-  
-  ModelData grassData = objLoader.loadObj("resources/meshes/grassModel.obj");
-  RawModel grass = loader.loadToVAO((GLfloat*) &grassData.mVertices[0], (GLuint*) &grassData.mIndices[0], (GLfloat*) &grassData.mTextureCoords[0], (GLfloat*) &grassData.mNormals[0], grassData.mVertices.size(), grassData.mIndices.size(), grassData.mTextureCoords.size(), grassData.mNormals.size());
+  RawModel dragon = loadModel("resources/meshes/dragon.obj", objLoader, loader);
+  RawModel fern = loadModel("resources/meshes/fern.obj", objLoader, loader);
+  RawModel grass = loadModel("resources/meshes/grassModel.obj", objLoader, loader);
+  RawModel playerModel = loadModel("resources/meshes/player.obj", objLoader, loader);
 
-  ModelTexture modelTexture{loader.loadTexture("resources/textures/scales.png")};
-  ModelTexture fernTexture{loader.loadTexture("resources/textures/fern.png")};
-  ModelTexture grassTexture{loader.loadTexture("resources/textures/grassTexture.png")};
-
-  modelTexture.mShineDamper = 10.0f;
-  modelTexture.mReflectivity = 1.0f;
-  
-  fernTexture.mShineDamper = 10.0f;
-  fernTexture.mReflectivity = 1.0f;
-  fernTexture.mHasTransparency = true;
-  
-  grassTexture.mShineDamper = 10.0f;
-  grassTexture.mReflectivity = 1.0f;
-  grassTexture.mHasTransparency = true;
-  grassTexture.mUseFakeLighting = true;
+  ModelTexture modelTexture = loadModelTexture("resources/textures/scales.png", loader, {10.0f, 1.0f, false, false});
+  ModelTexture fernTexture = loadModelTexture("resources/textures/fern.png", loader, {10.0f, 1.0f, true, false});
+  ModelTexture grassTexture = loadModelTexture("resources/textures/grassTexture.png", loader, {10.0f, 1.0f, true, true});
+  ModelTexture playerTexture = loadModelTexture("resources/textures/playerTexture.png", loader, {10.0f, 1.0f, false, false});
   
   TexturedModel texturedModel{dragon, modelTexture, TexturedModelType::DRAGON};
   TexturedModel fernTexturedModel{fern, fernTexture, TexturedModelType::FERN};
   TexturedModel grassTexturedModel{grass, grassTexture, TexturedModelType::GRASS};
-  
-  std::shared_ptr<Entity> entity = std::make_shared<Entity>(texturedModel, glm::vec3{50.0f, 0.0f, -30.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
-  std::shared_ptr<Entity> fernEntity = std::make_shared<Entity>(fernTexturedModel, glm::vec3{75.0f, 0.0f, -25.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
-  std::shared_ptr<Entity> grassEntity = std::make_shared<Entity>(grassTexturedModel, glm::vec3{25.0f, 0.0f, -25.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
-  
-  ModelTexture terrainTexture{loader.loadTexture("resources/textures/grassy2.png")};
-  terrainTexture.mShineDamper = 10.0f;
-  terrainTexture.mReflectivity = 1.0f;
-  
-  Terrain terrain{0, -1, loader, texturePack, blendMap};
-  Terrain terrain2{0, 0, loader, texturePack, blendMap};
-  
+  TexturedModel playerTexturedModel{playerModel, playerTexture, TexturedModelType::PLAYER};
+
+  auto entity = createEntity(texturedModel, glm::vec3{50.0f, 0.0f, -30.0f});
+  auto fernEntity = createEntity(fernTexturedModel, glm::vec3{75.0f, 0.0f, -25.0f});
+  auto grassEntity = createEntity(grassTexturedModel, glm::vec3{25.0f, 0.0f, -25.0f});
   masterRenderer.addTexturedModel(texturedModel);
   masterRenderer.addTexturedModel(fernTexturedModel);
   masterRenderer.addTexturedModel(grassTexturedModel);
-  masterRenderer.addEntity(entity, TexturedModelType::DRAGON);
-  masterRenderer.addEntity(fernEntity, TexturedModelType::FERN);
-  masterRenderer.addEntity(grassEntity, TexturedModelType::GRASS);
+  masterRenderer.addTexturedModel(playerTexturedModel);
+  
+  registerEntity(entity, masterRenderer, TexturedModelType::DRAGON);
+  registerEntity(fernEntity, masterRenderer, TexturedModelType::FERN);
+  registerEntity(grassEntity, masterRenderer, TexturedModelType::GRASS);
+  
+  generateFerns(masterRenderer, fernTexturedModel);
+
+  Terrain terrain{0, -1, loader, texturePack, blendMap};
   masterRenderer.addTerrain(terrain);
-  masterRenderer.addTerrain(terrain2);
+  
+  player = std::make_shared<Player>(playerTexturedModel, glm::vec3{25.0f, 0.0f, -30.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
+  masterRenderer.mEntityRenderer.mCamera.mPlayerHdl = player;
+  registerEntity(player, masterRenderer, TexturedModelType::PLAYER);
   
   while (!glfwWindowShouldClose(window)) {
-    masterRenderer.render(light);
-    entity->mRotationAngle = glfwGetTime();
-    glfwSwapBuffers(window);
+    timer.update();
+    delta = timer.getDelta();
+    
     glfwPollEvents();
+
+    while (delta > 0.0) {
+      dt = std::min(delta, timer.DT);
+      player->update(dt);
+      masterRenderer.mEntityRenderer.mCamera.update(dt);
+      delta -= dt;      
+    }
+    masterRenderer.render(light);
+    glfwSwapBuffers(window);
   }
   
   loader.cleanUp();

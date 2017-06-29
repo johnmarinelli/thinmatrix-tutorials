@@ -72,8 +72,7 @@ public:
     }
   }
   
-  void addEntity(const std::shared_ptr<Entity>& entity, TexturedModelType texturedModelType) {
-
+  void addEntity(std::shared_ptr<Entity> entity, TexturedModelType texturedModelType) {
     if (mEntities.find(texturedModelType) == mEntities.end()) {
       auto typeStr = textureModelStrings[texturedModelType];
       throw std::runtime_error("Texture model type: " + typeStr + " hasn't been added.");
@@ -129,10 +128,6 @@ public:
     glViewport(0, 0, width, height);
     
     return projection;
-  }
-  
-  void moveCamera(MovementDirection dir) {
-    mEntityRenderer.mCamera.move(dir);
   }
   
   void cleanUp() {
