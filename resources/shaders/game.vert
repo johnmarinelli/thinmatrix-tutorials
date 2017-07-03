@@ -14,6 +14,9 @@ uniform mat4 modelMatrix;
 
 uniform float useFakeLighting;
 
+uniform float numTextureRows;
+uniform vec2 textureAtlasXYOffset;
+
 out vec3 color;
 out vec2 texCoord;
 out vec3 worldNormal;
@@ -33,7 +36,7 @@ void main(void) {
   
   vec4 worldPosition = modelMatrix * vec4(vPos, 1.0);
   
-  texCoord = vTexCoord;
+  texCoord = (vTexCoord / numTextureRows) + textureAtlasXYOffset;
   worldNormal = (modelMatrix * vec4(actualNormal, 0.0)).xyz;
   toLightDir = lightPosition - worldPosition.xyz;
   

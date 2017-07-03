@@ -71,6 +71,7 @@ public:
     
     mShaderProgram.loadShineVariables(texture.mShineDamper, texture.mReflectivity, "shineDamper", "reflectivity");
     mShaderProgram.loadUseFakeLighting(texture.mUseFakeLighting, "useFakeLighting");
+    mShaderProgram.loadNumTextureRows(texture.mNumberOfRows, "numTextureRows");
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, model.mModelTexture.mTextureID);
   }
@@ -89,6 +90,7 @@ public:
     modelMatrix = glm::rotate(modelMatrix, toRadians(entity->mRotationAngle), entity->mRotation);
     modelMatrix = glm::scale(modelMatrix, entity->mScale);
     mShaderProgram.loadModelMatrix(modelMatrix, "modelMatrix");
+    mShaderProgram.loadTextureAtlasXYOffset(glm::vec2{entity->getTextureXOffset(), entity->getTextureYOffset()}, "textureAtlasXYOffset");
   }
   
   void enableCulling() {

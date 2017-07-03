@@ -18,30 +18,14 @@ public:
   std::vector<GLuint> mVBOs = {};
   std::vector<GLuint> mTextures = {};
   
-  /*RawModel loadToVAO(GLfloat positions[], GLuint indices[], GLfloat texCoords[], GLuint numVertices, GLuint numIndices, GLuint numTextureCoords) {
-    GLuint vaoID = createVAO();
-    bindIndicesBuffer(indices, numIndices);
-    
-    storeDataInAttributeList(POSITION_ATTRIBUTE_INDEX, positions, 3, numVertices);
-    storeDataInAttributeList(TEXTURE_COORD_ATTRIBUTE_INDEX, texCoords, 2, numTextureCoords);
-    
-    unbindVAO();
-    
-    RawModel model{vaoID, numVertices, numIndices};
-    model.mAttributes.push_back(POSITION_ATTRIBUTE_INDEX);
-    model.mAttributes.push_back(TEXTURE_COORD_ATTRIBUTE_INDEX);
-    
-    return model;
-  }*/
-  
   RawModel loadToVAO(GLfloat positions[],
-                     GLuint indices[],
-                     GLfloat texCoords[],
                      GLfloat normals[],
-                     GLuint numVertices,
-                     GLuint numIndices,
-                     GLuint numTextureCoords,
-                     GLuint numNormals) {
+                     GLfloat texCoords[],
+                     GLuint indices[],
+                     int numVertices,
+                     int numNormals,
+                     int numTextureCoords,
+                     int numIndices) {
     GLuint vaoID = createVAO();
     bindIndicesBuffer(indices, numIndices);
     
@@ -50,7 +34,7 @@ public:
     storeDataInAttributeList(TEXTURE_COORD_ATTRIBUTE_INDEX, texCoords, 2, numTextureCoords);
     unbindVAO();
     
-    RawModel model{vaoID, numVertices, numIndices};
+    RawModel model{vaoID, (GLuint) numVertices, (GLuint) numIndices};
     model.mAttributes.push_back(POSITION_ATTRIBUTE_INDEX);
     model.mAttributes.push_back(NORMAL_ATTRIBUTE_INDEX);
     model.mAttributes.push_back(TEXTURE_COORD_ATTRIBUTE_INDEX);
@@ -66,7 +50,7 @@ public:
     return vaoID;
   }
   
-  void storeDataInAttributeList(int attNum, GLfloat data[], int coordSize, GLuint numVertices) {
+  void storeDataInAttributeList(int attNum, GLfloat data[], int coordSize, int numVertices) {
     GLuint vboID;
     glGenBuffers(1, &vboID);
     mVBOs.push_back(vboID);

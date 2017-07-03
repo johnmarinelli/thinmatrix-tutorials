@@ -12,6 +12,18 @@ public:
     ShaderProgram() {    
   }
   
+  void loadTextureAtlasXYOffset(const glm::vec2& offset, const std::string& textureAtlasXYOffsetName) {
+    auto location = mUniforms[textureAtlasXYOffsetName];
+    
+    glUniform2f(location, offset.x, offset.y);
+  }
+  
+  void loadNumTextureRows(float num, const std::string& numTextureRowsName) {
+    auto numTextureRowsLocation = mUniforms[numTextureRowsName];
+    
+    glUniform1f(numTextureRowsLocation, num);
+  }
+  
   void loadUseFakeLighting(bool useFake, const std::string& useFakeLightingName) {
     auto useFakeLightingLocation = mUniforms[useFakeLightingName];
     

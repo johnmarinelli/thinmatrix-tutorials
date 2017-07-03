@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <iostream>
 #include <GLFW/glfw3.h>
+
+#include "Terrain.hpp"
 #include "Entity.hpp"
 #include "Utilities.h"
 
@@ -18,7 +20,7 @@ enum class PlayerMovementDirection {
 class Player : public Entity {
 public:
   
-  const float RUN_SPEED = 20.0f;
+  const float RUN_SPEED = 50.0f;
   const float TURN_SPEED = 160.0f;
   const float GRAVITY = -50.0f;
   const float JUMP_POWER = 30.0;
@@ -31,18 +33,20 @@ public:
   bool mIsInAir;
   
   Player() :
-    Entity() {    
+    Entity() {
+    mRotationAngle = 0.0f;
   }
   
   Player(const TexturedModel& model, const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scl) :
-    Entity(model, pos, rot, scl),
+    Entity(model, 0, pos, rot, scl),
     mCurrentSpeed(0.0f),
     mCurrentTurnSpeed(0.0f),
     mUpwardsSpeed(0.0f),
     mIsInAir(false) {
+    mRotationAngle = 0.0f;
   }
   
-  void update(double dt) {
+  void update(double dt, const Terrain& terrain) {
     auto dtSeconds = dt * 1000.0;
     
     mUpwardsSpeed += GRAVITY * dtSeconds;
@@ -55,12 +59,13 @@ public:
     
     mPosition += glm::vec3{dx, dy, dz};
     
-    if (mPosition.y < TERRAIN_HEIGHT) {
+    auto terrainHeight = terrain.getHeightAtCoord(mPosition.x, mPosition.z);
+    
+    if (mPosition.y < terrainHeight) {
       mUpwardsSpeed = 0.0f;
-      mPosition.y = TERRAIN_HEIGHT;
+      mPosition.y = terrainHeight;
       mIsInAir = false;
     }
-
     std::cout << "Player position: " << mPosition.x << ", " << mPosition.y << ", " << mPosition.z << '\n';
   }
   

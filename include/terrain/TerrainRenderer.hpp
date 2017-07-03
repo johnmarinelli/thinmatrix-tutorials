@@ -60,7 +60,7 @@ public:
     //glActiveTexture(GL_TEXTURE0);
     //glBindTexture(GL_TEXTURE_2D, model.mModelTexture.mTextureID);
     bindTextures(model);
-    mShaderProgram.loadShineVariables(10.0f, 1.0f, "shineDamper", "reflectivity");
+    mShaderProgram.loadShineVariables(100.0f, 0.0f, "shineDamper", "reflectivity");
   }
   
   void bindTextures(const Terrain& terrain) {

@@ -9,6 +9,7 @@ public:
   GLint mTextureID;
   float mShineDamper;
   float mReflectivity;
+  int mNumberOfRows;
   bool mHasTransparency;
   bool mUseFakeLighting;
   
@@ -16,6 +17,7 @@ public:
     mTextureID(-1),
     mShineDamper(1.0f),
     mReflectivity(0.0f),
+    mNumberOfRows(1),
     mHasTransparency(false),
     mUseFakeLighting(false) {
   }
@@ -24,6 +26,7 @@ public:
     mTextureID(texID),
     mShineDamper(1.0f),
     mReflectivity(0.0f),
+    mNumberOfRows(1),
     mHasTransparency(false),
     mUseFakeLighting(false) {
   }

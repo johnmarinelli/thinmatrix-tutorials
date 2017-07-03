@@ -9,7 +9,6 @@
 
 #include "Vertex.hpp"
 #include "ModelData.hpp"
-#include "Vertex.hpp"
 #include "RawModel.hpp"
 #include "Loader.hpp"
 

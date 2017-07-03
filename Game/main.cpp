@@ -49,6 +49,11 @@ static void mouseButtonCallback(GLFWwindow* window, int button, int action, int 
     if (GLFW_PRESS == action) leftMouseButtonDown = true;
     if (GLFW_RELEASE == action) leftMouseButtonDown = false;
   }
+  
+  if (GLFW_RELEASE == action) {
+    lastMouseXPosition = -1;
+    lastMouseYPosition = -1;
+  }
 }
 
 static void cursorPositionCallback(GLFWwindow* window, double xpos, double ypos) {
@@ -113,6 +118,8 @@ StaticShader loadShaders() {
   shaderProgram.registerUniform("ambientFactor");
   shaderProgram.registerUniform("useFakeLighting");
   shaderProgram.registerUniform("skyColor");
+  shaderProgram.registerUniform("numTextureRows");
+  shaderProgram.registerUniform("textureAtlasXYOffset");
   
   return shaderProgram;
 }
@@ -173,19 +180,28 @@ static GLFWwindow* initGLFW() {
 
 RawModel loadModel(const std::string& filepath, ObjLoader& objLoader, Loader& loader) {
   ModelData data = objLoader.loadObj(filepath);
-  RawModel model = loader.loadToVAO((GLfloat*) &data.mVertices[0], (GLuint*) &data.mIndices[0], (GLfloat*) &data.mTextureCoords[0], (GLfloat*) &data.mNormals[0], data.mVertices.size(), data.mIndices.size(), data.mTextureCoords.size(), data.mNormals.size());
+  RawModel model = loader.loadToVAO((GLfloat*) &data.mVertices[0],
+                                    (GLfloat*) &data.mNormals[0],
+                                    (GLfloat*) &data.mTextureCoords[0],
+                                    (GLuint*) &data.mIndices[0],
+                                    (int) data.mVertices.size(),
+                                    (int) data.mNormals.size(),
+                                    (int) data.mTextureCoords.size(),
+                                    (int) data.mIndices.size());
   return model;
 }
 
 struct ModelOptions {
   float mShineDamper;
   float mReflectivity;
+  int mNumberOfRows;
   bool mHasTransparency;
   bool mUseFakeLighting;
   
-  ModelOptions(float shineDamper, float reflectivity, bool hasTransparency, bool useFakeLighting) :
+  ModelOptions(float shineDamper, float reflectivity, bool hasTransparency, bool useFakeLighting, int numRows = 1) :
     mShineDamper(shineDamper),
     mReflectivity(reflectivity),
+    mNumberOfRows(numRows),
     mHasTransparency(hasTransparency),
     mUseFakeLighting(useFakeLighting) {
   }
@@ -197,17 +213,22 @@ ModelTexture loadModelTexture(const std::string& filepath, Loader& loader, const
   modelTexture.mReflectivity = opts.mReflectivity;
   modelTexture.mHasTransparency = opts.mHasTransparency;
   modelTexture.mUseFakeLighting = opts.mUseFakeLighting;
+  modelTexture.mNumberOfRows = opts.mNumberOfRows;
   
   return modelTexture;
 }
 
 std::shared_ptr<Entity> createEntity(const TexturedModel& texModel, const glm::vec3& pos, const glm::vec3& rot = glm::vec3{0.0f, 1.0f, 0.0f}, float rotAngle = 0.0f, const glm::vec3& scale = glm::vec3{1.0f}) {
-  std::shared_ptr<Entity> entity = std::make_shared<Entity>(texModel, pos, rot, scale);
+  std::shared_ptr<Entity> entity = std::make_shared<Entity>(texModel, 0, pos, rot, scale);
   entity->mRotationAngle = rotAngle;
   return entity;
 }
 
 void registerEntity(const std::shared_ptr<Entity> entity, MasterRenderer& masterRenderer, TexturedModelType texturedModelType) {
+  // quick & dirty way to ensure entity is rendered at terrain height
+  // TODO: change this later  
+  entity->mPosition.y = masterRenderer.mTerrains[0].getHeightAtCoord(entity->mPosition.x, entity->mPosition.z);
+  
   masterRenderer.addEntity(entity, texturedModelType);
 }
 
@@ -216,7 +237,7 @@ void generateFerns(MasterRenderer& masterRenderer, const TexturedModel& fernTexM
   
   for (auto i = 0; i < numFerns; ++i) {
     auto rx = random(0.0f, 800.0f);
-    auto rz = random(-800.0f, 000.0f);
+    auto rz = random(0.0f, 800.0f);
     auto pos = glm::vec3{rx, 0.0f, rz};
     
     auto fern = createEntity(fernTexModel, pos);
@@ -241,6 +262,8 @@ int main(int argc, const char * argv[]) {
   GLuint blendMap = loader.loadTexture("resources/textures/blendMap.png");
   
   TerrainTexturePack texturePack{bgTexture, rTexture, gTexture, bTexture};
+  Terrain terrain{0, 0, loader, texturePack, blendMap, "resources/textures/heightmap.png"};
+  masterRenderer.addTerrain(terrain);
   
   StaticShader shaderProgram = loadShaders();
   TerrainShader terrainShader = loadTerrainShader();
@@ -260,7 +283,7 @@ int main(int argc, const char * argv[]) {
   RawModel playerModel = loadModel("resources/meshes/player.obj", objLoader, loader);
 
   ModelTexture modelTexture = loadModelTexture("resources/textures/scales.png", loader, {10.0f, 1.0f, false, false});
-  ModelTexture fernTexture = loadModelTexture("resources/textures/fern.png", loader, {10.0f, 1.0f, true, false});
+  ModelTexture fernTexture = loadModelTexture("resources/textures/fern.png", loader, {10.0f, 1.0f, true, false, 2});
   ModelTexture grassTexture = loadModelTexture("resources/textures/grassTexture.png", loader, {10.0f, 1.0f, true, true});
   ModelTexture playerTexture = loadModelTexture("resources/textures/playerTexture.png", loader, {10.0f, 1.0f, false, false});
   
@@ -269,9 +292,9 @@ int main(int argc, const char * argv[]) {
   TexturedModel grassTexturedModel{grass, grassTexture, TexturedModelType::GRASS};
   TexturedModel playerTexturedModel{playerModel, playerTexture, TexturedModelType::PLAYER};
 
-  auto entity = createEntity(texturedModel, glm::vec3{50.0f, 0.0f, -30.0f});
-  auto fernEntity = createEntity(fernTexturedModel, glm::vec3{75.0f, 0.0f, -25.0f});
-  auto grassEntity = createEntity(grassTexturedModel, glm::vec3{25.0f, 0.0f, -25.0f});
+  auto entity = createEntity(texturedModel, glm::vec3{50.0f, 0.0f, 30.0f});
+  auto fernEntity = createEntity(fernTexturedModel, glm::vec3{75.0f, 0.0f, 25.0f});
+  auto grassEntity = createEntity(grassTexturedModel, glm::vec3{25.0f, 0.0f, 25.0f});
   masterRenderer.addTexturedModel(texturedModel);
   masterRenderer.addTexturedModel(fernTexturedModel);
   masterRenderer.addTexturedModel(grassTexturedModel);
@@ -283,10 +306,7 @@ int main(int argc, const char * argv[]) {
   
   generateFerns(masterRenderer, fernTexturedModel);
 
-  Terrain terrain{0, -1, loader, texturePack, blendMap};
-  masterRenderer.addTerrain(terrain);
-  
-  player = std::make_shared<Player>(playerTexturedModel, glm::vec3{25.0f, 0.0f, -30.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
+  player = std::make_shared<Player>(playerTexturedModel, glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
   masterRenderer.mEntityRenderer.mCamera.mPlayerHdl = player;
   registerEntity(player, masterRenderer, TexturedModelType::PLAYER);
   
@@ -298,7 +318,7 @@ int main(int argc, const char * argv[]) {
 
     while (delta > 0.0) {
       dt = std::min(delta, timer.DT);
-      player->update(dt);
+      player->update(dt, masterRenderer.mTerrains[0]);
       masterRenderer.mEntityRenderer.mCamera.update(dt);
       delta -= dt;      
     }

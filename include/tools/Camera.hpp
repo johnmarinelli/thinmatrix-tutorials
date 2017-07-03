@@ -33,7 +33,7 @@ public:
     mCameraStep(1.0f),
     mDistanceFromPlayer(50.0f),
     mAngleAroundPlayer(0.0f),
-    mPitch(50.0f) {
+    mPitch(25.0f) {
     mViewMatrix = createViewMatrix();
   }
   
@@ -83,8 +83,7 @@ public:
     }
     
     mPosition.z = mPlayerHdl->mPosition.z - offsetZ;
-    
-    std::cout << "Camera position: " << mPosition.x << ", " << mPosition.y << ", " << mPosition.z << '\n';
+  
   }
   
   float calculateHorizontalDistance() {
