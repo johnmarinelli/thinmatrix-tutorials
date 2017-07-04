@@ -52,6 +52,7 @@ public:
       }
       
       unbindTexturedModel(texturedModel);
+      glBindVertexArray(0);
     }
   }
   
@@ -82,6 +83,7 @@ public:
     for (auto att : rawModel.mAttributes) {
       glDisableVertexAttribArray(att);
     }
+    glBindVertexArray(0);
   }
   
   void prepareInstance(std::shared_ptr<Entity> entity) {

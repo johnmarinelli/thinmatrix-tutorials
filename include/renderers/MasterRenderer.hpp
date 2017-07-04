@@ -57,6 +57,7 @@ public:
     mProjectionMatrix = createProjectionMatrix(mRenderWidth, mRenderHeight);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
+    glEnable(GL_DEPTH_TEST);
     mEntityRenderer.init(mProjectionMatrix);
     mTerrainRenderer.init(mProjectionMatrix);
   }
@@ -92,6 +93,7 @@ public:
     auto viewMatrix = mEntityRenderer.mCamera.createViewMatrix();
     
     mShaderProgram.use();
+    mShaderProgram.loadProjectionMatrix(mProjectionMatrix, "projectionMatrix");
     mShaderProgram.loadLight(sun, "lightPosition", "lightColor");
     mShaderProgram.loadAmbientFactor(0.2f, "ambientFactor");
     mShaderProgram.loadViewMatrix(viewMatrix, "viewMatrix");
@@ -104,17 +106,14 @@ public:
     mTerrainShader.loadAmbientFactor(0.2f, "ambientFactor");
     mTerrainShader.loadViewMatrix(viewMatrix, "viewMatrix");
     mTerrainShader.loadSkyColor(mSkyColor, "skyColor");
-
     mTerrainRenderer.render(mTerrains);
     mTerrainShader.disable();
+    
   }
   
   void prepare() {
-    glEnable(GL_DEPTH_TEST);
     glClearColor(mSkyColor.r, mSkyColor.g, mSkyColor.b, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
-    mShaderProgram.loadProjectionMatrix(mProjectionMatrix, "projectionMatrix");
   }
   
   glm::mat4 createProjectionMatrix(int width, int height) const {

@@ -42,6 +42,25 @@ public:
     return model;
   }
   
+  RawModel loadQuadToVAO(GLfloat positions[]) {
+    GLuint vaoID = createVAO();
+
+    GLuint vboID;
+    glGenBuffers(1, &vboID);
+    mVBOs.push_back(vboID);
+    glBindBuffer(GL_ARRAY_BUFFER, vboID);
+    GLfloat* buf = &positions[0];
+    glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(GLfloat), buf, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    unbindVAO();
+    
+    RawModel model{vaoID, 4, 0};
+    model.mAttributes.push_back(POSITION_ATTRIBUTE_INDEX);
+    
+    return model;
+  }
+  
   GLuint createVAO() {
     GLuint vaoID;
     glGenVertexArrays(1, &vaoID);
@@ -50,14 +69,14 @@ public:
     return vaoID;
   }
   
-  void storeDataInAttributeList(int attNum, GLfloat data[], int coordSize, int numVertices) {
+  void storeDataInAttributeList(int attNum, GLfloat data[], int coordSize, int count) {
     GLuint vboID;
     glGenBuffers(1, &vboID);
     mVBOs.push_back(vboID);
     
     glBindBuffer(GL_ARRAY_BUFFER, vboID);
     GLfloat* buf = &data[0];
-    glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(GLfloat), buf, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, count * sizeof(GLfloat), buf, GL_STATIC_DRAW);
     
     // specifies all the state that opengl needs to know about for attribute `attNum`
     // it has `coordSize` compponents

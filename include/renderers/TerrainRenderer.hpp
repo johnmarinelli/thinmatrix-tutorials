@@ -45,6 +45,7 @@ public:
       prepareInstance(terrain);
       glDrawElements(GL_TRIANGLES, terrain.mRawModel.mIndexCount, GL_UNSIGNED_INT, 0);
       unbindTexturedModel(terrain);
+      glBindVertexArray(0);
     }
   }
   
@@ -57,8 +58,6 @@ public:
       glEnableVertexAttribArray(att);
     }
     
-    //glActiveTexture(GL_TEXTURE0);
-    //glBindTexture(GL_TEXTURE_2D, model.mModelTexture.mTextureID);
     bindTextures(model);
     mShaderProgram.loadShineVariables(100.0f, 0.0f, "shineDamper", "reflectivity");
   }
@@ -80,8 +79,6 @@ public:
     
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, terrain.mBlendMap.mTextureID);
-      
-
   }
   
   void unbindTexturedModel(const Terrain& model) {
@@ -89,6 +86,7 @@ public:
     for (auto att : rawModel.mAttributes) {
       glDisableVertexAttribArray(att);
     }
+    glBindVertexArray(0);
   }
   
   void prepareInstance(const Terrain& terrain) {

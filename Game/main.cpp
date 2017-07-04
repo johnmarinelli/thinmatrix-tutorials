@@ -21,6 +21,7 @@
 #include "Terrain.hpp"
 #include "TerrainTexturePack.hpp"
 #include "Timer.hpp"
+#include "GUIRenderer.hpp"
 
 const int WIDTH = 640;
 const int HEIGHT = 480;
@@ -145,6 +146,7 @@ TerrainShader loadTerrainShader() {
   
   return shaderProgram;
 }
+
 
 static GLFWwindow* initGLFW() {
   GLFWwindow* window;
@@ -310,6 +312,12 @@ int main(int argc, const char * argv[]) {
   masterRenderer.mEntityRenderer.mCamera.mPlayerHdl = player;
   registerEntity(player, masterRenderer, TexturedModelType::PLAYER);
   
+  std::vector<GUITexture> guis;
+  GUITexture gui{loader.loadTexture("resources/textures/puppy.png"), glm::vec2{0.5f, 0.5f}, glm::vec2{0.25f, 0.25f}};
+  guis.push_back(gui);
+  
+  GUIRenderer guiRenderer{loader};
+  
   while (!glfwWindowShouldClose(window)) {
     timer.update();
     delta = timer.getDelta();
@@ -323,7 +331,15 @@ int main(int argc, const char * argv[]) {
       delta -= dt;      
     }
     masterRenderer.render(light);
+    guiRenderer.render(guis);
+    
     glfwSwapBuffers(window);
+    
+    int glErr = glGetError();
+    
+    if (0 != glErr) {
+      std::cout << "OPENGL ERROR! code: " << glErr << '\n';
+    }
   }
   
   loader.cleanUp();

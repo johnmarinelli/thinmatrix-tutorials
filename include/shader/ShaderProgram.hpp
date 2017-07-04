@@ -21,7 +21,7 @@ public:
   }
   
   ~ShaderProgram() {
-    glDeleteProgram(mProgramID);
+    //glDeleteProgram(mProgramID);
   }
   
   void initFromFiles(std::string vertexShaderFilename, std::string fragmentShaderFilename) {
