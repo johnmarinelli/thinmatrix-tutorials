@@ -22,6 +22,8 @@ public:
   void unbindTexturedModel(const Terrain& terrain);
   void prepareInstance(const Terrain& terrain);
   
+  void cleanUp();
+  
   TerrainShader mShaderProgram;
   GLFWwindow* mWindowHdl;
   glm::mat4 mProjectionMatrix;

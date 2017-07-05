@@ -34,7 +34,6 @@ public:
   
   std::string loadShaderFromFile(const std::string& filename);
 
-  
   inline void use() {
     if (mInitialized) {
       glUseProgram(mProgramID);
@@ -49,6 +48,10 @@ public:
   inline void disable() {
     glUseProgram(0);
   }
+  
+  // calls glDeleteProgram on this program.
+  // SHOULD BE ONLY PLACE glDeleteProgram IS CALLED.
+  void cleanUp();
   
   GLuint attribute(const std::string attributeName);
   GLuint uniform(const std::string uniformName);

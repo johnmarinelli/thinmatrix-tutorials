@@ -87,6 +87,9 @@ void TerrainRenderer::prepareInstance(const Terrain& terrain) {
   mShaderProgram.loadModelMatrix(modelMatrix, "modelMatrix");
 }
 
+void TerrainRenderer::cleanUp() {
+  mShaderProgram.cleanUp();
+}
 
 
 

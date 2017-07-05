@@ -53,14 +53,14 @@ GLuint Loader::createVAO() {
   return vaoID;
 }
 
-void Loader::storeDataInAttributeList(int attNum, GLfloat data[], int coordSize, int count) {
+void Loader::storeDataInAttributeList(int attNum, GLfloat data[], int coordSize, int dataSize) {
   GLuint vboID;
   glGenBuffers(1, &vboID);
   mVBOs.push_back(vboID);
   
   glBindBuffer(GL_ARRAY_BUFFER, vboID);
   GLfloat* buf = &data[0];
-  glBufferData(GL_ARRAY_BUFFER, count * sizeof(GLfloat), buf, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, dataSize * sizeof(GLfloat), buf, GL_STATIC_DRAW);
   
   // specifies all the state that opengl needs to know about for attribute `attNum`
   // it has `coordSize` compponents

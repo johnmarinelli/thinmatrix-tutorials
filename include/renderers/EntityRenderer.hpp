@@ -30,6 +30,7 @@ public:
   
   void enableCulling();
   void disableCulling();
+  void cleanUp();
   
   GLFWwindow* mWindowHdl;
   StaticShader mShaderProgram;

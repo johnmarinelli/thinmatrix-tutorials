@@ -267,7 +267,7 @@ int main(int argc, const char * argv[]) {
   Terrain terrain{0, 0, loader, texturePack, blendMap, "resources/textures/heightmap.png"};
   masterRenderer.addTerrain(terrain);
   
-  StaticShader shaderProgram = loadShaders();
+  StaticShader staticShader = loadShaders();
   TerrainShader terrainShader = loadTerrainShader();
   glm::vec3 lightPos{10.0f, 5000.0f, -400.0f};
   glm::vec3 lightCol{1.0f, 1.0f, 1.0f};
@@ -275,7 +275,7 @@ int main(int argc, const char * argv[]) {
   
   ObjLoader objLoader;
   masterRenderer.mWindowHdl = window;
-  masterRenderer.mShaderProgram = shaderProgram;
+  masterRenderer.mStaticShader = staticShader;
   masterRenderer.mTerrainShader = terrainShader;
   masterRenderer.init();
   
@@ -342,6 +342,7 @@ int main(int argc, const char * argv[]) {
     }
   }
   
+  masterRenderer.cleanUp();
   loader.cleanUp();
   
   glfwDestroyWindow(window);

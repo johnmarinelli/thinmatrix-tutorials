@@ -17,9 +17,10 @@ public:
   GUIShader loadGUIShader();
   
   void render(const std::vector<GUITexture>& guis);
+  void cleanUp();
   
   RawModel mQuad;
-  GUIShader mShader;
+  GUIShader mShaderProgram;
   
 };
 

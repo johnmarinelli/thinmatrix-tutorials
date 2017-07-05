@@ -2,7 +2,7 @@
 
 
 MasterRenderer::MasterRenderer() :
-  mShaderProgram(),
+  mStaticShader(),
   mTerrainShader(),
   mWindowHdl(nullptr),
   mEntityRenderer(),
@@ -11,7 +11,7 @@ MasterRenderer::MasterRenderer() :
 }
 
 MasterRenderer::MasterRenderer(GLFWwindow* window, const StaticShader& program, const TerrainShader& terrainShader) :
-  mShaderProgram(program),
+  mStaticShader(program),
   mTerrainShader(terrainShader),
   mWindowHdl(window),
   mEntityRenderer(window, program),
@@ -21,7 +21,7 @@ MasterRenderer::MasterRenderer(GLFWwindow* window, const StaticShader& program, 
 
 void MasterRenderer::init() {
   mEntityRenderer.mWindowHdl = mWindowHdl;
-  mEntityRenderer.mShaderProgram = mShaderProgram;
+  mEntityRenderer.mShaderProgram = mStaticShader;
   mTerrainRenderer.mWindowHdl = mWindowHdl;
   mTerrainRenderer.mShaderProgram = mTerrainShader;
   
@@ -64,14 +64,14 @@ void MasterRenderer::render(const Light& sun) {
   
   auto viewMatrix = mEntityRenderer.mCamera.createViewMatrix();
   
-  mShaderProgram.use();
-  mShaderProgram.loadProjectionMatrix(mProjectionMatrix, "projectionMatrix");
-  mShaderProgram.loadLight(sun, "lightPosition", "lightColor");
-  mShaderProgram.loadAmbientFactor(0.2f, "ambientFactor");
-  mShaderProgram.loadViewMatrix(viewMatrix, "viewMatrix");
-  mShaderProgram.loadSkyColor(mSkyColor, "skyColor");
+  mStaticShader.use();
+  mStaticShader.loadProjectionMatrix(mProjectionMatrix, "projectionMatrix");
+  mStaticShader.loadLight(sun, "lightPosition", "lightColor");
+  mStaticShader.loadAmbientFactor(0.2f, "ambientFactor");
+  mStaticShader.loadViewMatrix(viewMatrix, "viewMatrix");
+  mStaticShader.loadSkyColor(mSkyColor, "skyColor");
   mEntityRenderer.render(mEntities);
-  mShaderProgram.disable();
+  mStaticShader.disable();
   
   mTerrainShader.use();
   mTerrainShader.loadLight(sun, "lightPosition", "lightColor");
@@ -102,4 +102,6 @@ glm::mat4 MasterRenderer::createProjectionMatrix(int width, int height) const {
 }
 
 void MasterRenderer::cleanUp() {
+  mEntityRenderer.cleanUp();
+  mTerrainRenderer.cleanUp();
 }

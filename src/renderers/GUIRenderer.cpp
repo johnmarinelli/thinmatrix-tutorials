@@ -8,7 +8,7 @@ GUIRenderer::GUIRenderer(Loader& loader) {
     1.0f, -1.0f
   };
   mQuad = loader.loadQuadToVAO(positions);
-  mShader = loadGUIShader();
+  mShaderProgram = loadGUIShader();
 }
 
 GUIShader GUIRenderer::loadGUIShader() {
@@ -18,7 +18,7 @@ GUIShader GUIRenderer::loadGUIShader() {
 }
 
 void GUIRenderer::render(const std::vector<GUITexture>& guis) {
-  mShader.use();
+  mShaderProgram.use();
   glBindVertexArray(mQuad.mVaoID);
   glEnableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
   
@@ -34,7 +34,7 @@ void GUIRenderer::render(const std::vector<GUITexture>& guis) {
     glm::mat4 modelMatrix{1.0f};
     modelMatrix = glm::translate(modelMatrix, glm::vec3{gui.mPosition.x, gui.mPosition.y, 0.0});
     modelMatrix = glm::scale(modelMatrix, glm::vec3{gui.mScale.x, gui.mScale.y, 1.0});
-    mShader.loadModelMatrix(modelMatrix, "modelMatrix");
+    mShaderProgram.loadModelMatrix(modelMatrix, "modelMatrix");
     
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   }
@@ -45,6 +45,9 @@ void GUIRenderer::render(const std::vector<GUITexture>& guis) {
   
   glDisableVertexAttribArray(POSITION_ATTRIBUTE_INDEX);
   glBindVertexArray(0);
-  mShader.disable();
-  
+  mShaderProgram.disable();
+}
+
+void GUIRenderer::cleanUp() {
+  mShaderProgram.cleanUp();
 }

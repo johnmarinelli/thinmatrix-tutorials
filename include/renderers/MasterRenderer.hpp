@@ -32,7 +32,7 @@ public:
   glm::mat4 createProjectionMatrix(int width, int height) const;
   void cleanUp();
   
-  StaticShader mShaderProgram;
+  StaticShader mStaticShader;
   TerrainShader mTerrainShader;
   EntityRenderer mEntityRenderer;
   TerrainRenderer mTerrainRenderer;

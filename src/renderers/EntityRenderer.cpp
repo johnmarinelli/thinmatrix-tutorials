@@ -80,3 +80,7 @@ void EntityRenderer::enableCulling() {
 void EntityRenderer::disableCulling() {
   glDisable(GL_CULL_FACE);
 }
+
+void EntityRenderer::cleanUp() {
+  mShaderProgram.cleanUp();
+}

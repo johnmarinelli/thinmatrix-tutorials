@@ -214,3 +214,7 @@ std::string ShaderProgram::loadShaderFromFile(const std::string& filename) {
   file.close();
   return stream.str();
 }
+
+void ShaderProgram::cleanUp() {
+  glDeleteProgram(mProgramID);
+}
