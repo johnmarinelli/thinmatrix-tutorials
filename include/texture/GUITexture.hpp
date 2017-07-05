@@ -6,6 +6,8 @@
 
 class GUITexture {
 public:
+  GUITexture(int texID, const glm::vec2& pos, const glm::vec2& scale);
+  
   int mTextureID;
   
   // center of quad
@@ -13,13 +15,6 @@ public:
   
   // x,y size of quad related to size of screen
   glm::vec2 mScale;
-  
-  GUITexture(int texID, const glm::vec2& pos, const glm::vec2& scale) :
-    mTextureID(texID),
-    mPosition(pos),
-    mScale(scale) {
-  }
-  
   
 };
 

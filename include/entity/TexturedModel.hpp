@@ -28,24 +28,15 @@ static std::map<TexturedModelType, std::string> textureModelStrings = {
   std::pair<TexturedModelType, std::string>{TexturedModelType::PLAYER, "PLAYER"}
 };
 
-
 class TexturedModel {
 public:
   RawModel mRawModel;
   ModelTexture mModelTexture;
   TexturedModelType mModelType;
   
-  TexturedModel() :
-    mRawModel(),
-    mModelTexture(),
-    mModelType(TexturedModelType::NONE) {    
-  }
+  TexturedModel();
   
-  TexturedModel(const RawModel& rawModel, const ModelTexture& modelTexture, TexturedModelType type) :
-    mRawModel(rawModel),
-    mModelTexture(modelTexture),
-    mModelType(type) {
-  }
+  TexturedModel(const RawModel& rawModel, const ModelTexture& modelTexture, TexturedModelType type);
 };
 
 #endif

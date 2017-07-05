@@ -9,11 +9,7 @@ public:
   glm::vec3 mPosition;
   glm::vec3 mColor;
   
-  Light(const glm::vec3& pos, const glm::vec3& col) :
-    mPosition(pos),
-    mColor(col) {
-    
-  }
+  Light(const glm::vec3& pos, const glm::vec3& col);
 };
 
 #endif

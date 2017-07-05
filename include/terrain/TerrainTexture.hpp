@@ -7,17 +7,10 @@
 
 class TerrainTexture {
 public:
+  TerrainTexture();
+  TerrainTexture(GLuint texID);
+  
   GLuint mTextureID;
-  
-  TerrainTexture() :
-    mTextureID(std::numeric_limits<int>::max()) {
-  }
-  
-  TerrainTexture(GLuint texID) :
-    mTextureID(texID) {
-    
-  }
-  
 };
 
 #endif
