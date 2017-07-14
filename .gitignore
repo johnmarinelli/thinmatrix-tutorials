@@ -2,5 +2,5 @@
 Game.xcodeproj
 *.obj
 *.png
-resources/textures
+resources/textures/*
 resources/meshes

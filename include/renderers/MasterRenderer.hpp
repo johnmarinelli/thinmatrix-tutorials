@@ -39,9 +39,11 @@ public:
   StaticShader mStaticShader;
   TerrainShader mTerrainShader;
   SkyboxShader mSkyboxShader;
+  NormalShader mNormalShader;
   EntityRenderer mEntityRenderer;
   TerrainRenderer mTerrainRenderer;
   SkyboxRenderer mSkyboxRenderer;
+  NormalRenderer mNormalRenderer;
   
   std::vector<Terrain> mTerrains;
   glm::mat4 mProjectionMatrix;
