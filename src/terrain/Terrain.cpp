@@ -1,11 +1,11 @@
 #include "Terrain.hpp"
 
 Terrain::Terrain(int gridX, int gridZ, Loader& loader, const TerrainTexturePack& texturePack, const TerrainTexture& blendMap, const std::string& heightMapPath) :
-mTerrainTexturePack(texturePack),
-mBlendMap(blendMap),
-mX(gridX * SIZE),
-mZ(gridZ * SIZE),
-mHeightMap() {
+  mTerrainTexturePack(texturePack),
+  mBlendMap(blendMap),
+  mX(gridX * SIZE),
+  mZ(gridZ * SIZE),
+  mHeightMap() {
   mRawModel = generateTerrain(loader, heightMapPath);
 }
 
@@ -69,7 +69,8 @@ float Terrain::getHeightAtCoord(float worldX, float worldZ) const {
   float terrainX = worldX - mX;
   float terrainZ = worldZ - mZ;
   float gridSquareSize = SIZE / ((float) mHeightMap.mIndexedHeights.size() - 1);
-  float height = 0.0f;
+  //float height = 0.0f;
+  float height = std::numeric_limits<float>::min();
   
   int gridX = std::floor(terrainX / gridSquareSize);
   int gridZ = std::floor(terrainZ / gridSquareSize);
@@ -166,6 +167,7 @@ RawModel Terrain::generateTerrain(Loader& loader, const std::string& filepath) {
                           (GLuint) mIndices.size());
 }
 
+/*
 png_bytep* Terrain::readPNG(const std::string& fn, int& width, int& height) {
   png_byte color_type, bit_depth;
   png_bytep *row_pointers;
@@ -229,3 +231,4 @@ png_bytep* Terrain::readPNG(const std::string& fn, int& width, int& height) {
   
   return row_pointers;
 }
+*/

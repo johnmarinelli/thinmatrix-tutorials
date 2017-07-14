@@ -11,12 +11,6 @@ public:
   
   Entity(const TexturedModel& model, int texIndex, const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scl);
   
-  void increasePosition(const glm::vec3& d);
-  
-  void increaseRotation(const glm::vec3& d);
-  
-  void increaseScale(const glm::vec3& d);
-  
   float getTextureXOffset();
   
   float getTextureYOffset();

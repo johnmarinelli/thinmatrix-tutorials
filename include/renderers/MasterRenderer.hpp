@@ -1,32 +1,36 @@
 #ifndef MasterRenderer_hpp
 #define MasterRenderer_hpp
 
-#include <stdio.h>
+#include <GLFW/glfw3.h>
 #include <map>
 
 #include "StaticShader.hpp"
 #include "EntityRenderer.hpp"
 #include "TerrainShader.hpp"
 #include "TerrainRenderer.hpp"
+#include "NormalShader.hpp"
+#include "NormalRenderer.hpp"
 #include "TexturedModel.hpp"
+#include "SkyboxRenderer.hpp"
 #include "Entity.hpp"
 #include "Light.hpp"
 #include "Camera.hpp"
+
+class Loader;
 
 class MasterRenderer {
 public:
   MasterRenderer();
   
-  MasterRenderer(GLFWwindow*, const StaticShader&, const TerrainShader&);
-  
-  void init();
+  void init(GLFWwindow* window, Loader& loader);
   
   void addTexturedModel(const TexturedModel& texturedModel);
   
   void addEntity(std::shared_ptr<Entity> entity, TexturedModelType texturedModelType);
   
   void addTerrain(const Terrain& terrain);
-  void render(const Light& sun);
+  void update(double dt);
+  void render(const std::vector<Light>& lights);
   
   void prepare();
   glm::mat4 createProjectionMatrix(int width, int height) const;
@@ -34,11 +38,12 @@ public:
   
   StaticShader mStaticShader;
   TerrainShader mTerrainShader;
+  SkyboxShader mSkyboxShader;
   EntityRenderer mEntityRenderer;
   TerrainRenderer mTerrainRenderer;
+  SkyboxRenderer mSkyboxRenderer;
   
   std::vector<Terrain> mTerrains;
-  GLFWwindow* mWindowHdl;
   glm::mat4 mProjectionMatrix;
   int mRenderWidth, mRenderHeight;
   

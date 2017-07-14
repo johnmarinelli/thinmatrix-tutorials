@@ -12,9 +12,7 @@ class Terrain;
 
 class TerrainRenderer {
 public:
-  TerrainRenderer();
-  TerrainRenderer(GLFWwindow* window, const TerrainShader& shader);
-  
+  TerrainRenderer();  
   void init(const glm::mat4& projMatrix);
   void render(const std::vector<Terrain>& terrains);
   void prepareTerrain(const Terrain& terrain);
@@ -25,7 +23,6 @@ public:
   void cleanUp();
   
   TerrainShader mShaderProgram;
-  GLFWwindow* mWindowHdl;
   glm::mat4 mProjectionMatrix;
 };
 

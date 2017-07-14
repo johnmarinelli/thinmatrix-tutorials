@@ -1,34 +1,38 @@
 #ifndef StaticShader_hpp
 #define StaticShader_hpp
 
-#include <stdio.h>
+#include <vector>
 
 #include "ShaderProgram.hpp"
+
+class Light;
 
 class StaticShader : public ShaderProgram {
 public:
   
   StaticShader();
   
-  void loadTextureAtlasXYOffset(const glm::vec2& offset, const std::string& textureAtlasXYOffsetName);
+  void init(const std::string& vertexFilepath, const std::string& fragmentFilepath);
   
-  void loadNumTextureRows(float num, const std::string& numTextureRowsName);
+  void loadTextureAtlasXYOffset(const glm::vec2& offset);
   
-  void loadUseFakeLighting(bool useFake, const std::string& useFakeLightingName);
+  void loadNumTextureRows(float num);
   
-  void loadSkyColor(const glm::vec3& skyColor, const std::string& skyColorName);
+  void loadUseFakeLighting(bool useFake);
   
-  void loadLight(const Light& light, const std::string& posName, const std::string& colName);
+  void loadSkyColor(const glm::vec3& skyColor);
   
-  void loadShineVariables(float shineDamper, float reflectivity, const std::string& damperName, const std::string& refName);
+  void loadLights(const std::vector<Light>& lights);
   
-  void loadAmbientFactor(float ambientFactor, const std::string& ambientName);
+  void loadShineVariables(float shineDamper, float reflectivity);
   
-  void loadProjectionMatrix(const glm::mat4& projectionMatrix, const std::string& projectionMatrixName);
+  void loadAmbientFactor(float ambientFactor);
   
-  void loadViewMatrix(const glm::mat4& viewMatrix, const std::string& viewMatrixName);
+  void loadProjectionMatrix(const glm::mat4& projectionMatrix);
   
-  void loadModelMatrix(const glm::mat4& modelMatrix, const std::string& modelMatrixName);
+  void loadViewMatrix(const glm::mat4& viewMatrix);
+  
+  void loadModelMatrix(const glm::mat4& modelMatrix);
 
 };
 

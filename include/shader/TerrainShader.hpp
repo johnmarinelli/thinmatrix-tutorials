@@ -3,6 +3,7 @@
 
 #include <OpenGL/gl3.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <vector>
 
 #include "Light.hpp"
 #include "ShaderProgram.hpp"
@@ -12,25 +13,27 @@ public:
   
   TerrainShader();
   
+  void init(const std::string& vertexFilepath, const std::string& fragmentFilepath);
+  
   void connectTextureUnits();
   
   void loadInt(GLuint i, const std::string& name);
   
   void loadFloat(GLfloat f, const std::string& name);
   
-  void loadLight(const Light& light, const std::string& posName, const std::string& colName);
+  void loadLights(const std::vector<Light>& light);
   
-  void loadSkyColor(const glm::vec3& skyColor, const std::string& skyColorName);
+  void loadSkyColor(const glm::vec3& skyColor);
   
-  void loadShineVariables(float shineDamper, float reflectivity, const std::string& damperName, const std::string& refName);
+  void loadShineVariables(float shineDamper, float reflectivity);
   
-  void loadAmbientFactor(float ambientFactor, const std::string& ambientName);
+  void loadAmbientFactor(float ambientFactor);
   
-  void loadProjectionMatrix(const glm::mat4& projectionMatrix, const std::string& projectionMatrixName);
+  void loadProjectionMatrix(const glm::mat4& projectionMatrix);
   
-  void loadViewMatrix(const glm::mat4& viewMatrix, const std::string& viewMatrixName);
+  void loadViewMatrix(const glm::mat4& viewMatrix);
   
-  void loadModelMatrix(const glm::mat4& modelMatrix, const std::string& modelMatrixName);
+  void loadModelMatrix(const glm::mat4& modelMatrix);
 };
 
 #endif

@@ -9,8 +9,6 @@
 #include <OpenGL/gl3.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Light.hpp"
-
 class ShaderProgram {
 public:
   

@@ -1,69 +1,107 @@
 #include "StaticShader.hpp"
-
+#include "Utilities.h"
+#include "Light.hpp"
 
 StaticShader::StaticShader() :
   ShaderProgram() {
 }
 
-void StaticShader::loadTextureAtlasXYOffset(const glm::vec2& offset, const std::string& textureAtlasXYOffsetName) {
-  auto location = mUniforms[textureAtlasXYOffsetName];
+void StaticShader::init(const std::string &vertexFilepath, const std::string &fragmentFilepath) {
+  initFromFiles(vertexFilepath, fragmentFilepath);
+  
+  registerUniform("projectionMatrix");
+  registerUniform("viewMatrix");
+  registerUniform("modelMatrix");
+  registerUniform("shineDamper");
+  registerUniform("reflectivity");
+  registerUniform("ambientFactor");
+  registerUniform("useFakeLighting");
+  registerUniform("skyColor");
+  registerUniform("numTextureRows");
+  registerUniform("textureAtlasXYOffset");
+  
+  for (int i = 0; i < MAX_LIGHTS; ++i) {
+    registerUniform("lightPosition[" + std::to_string(i) + "]");
+    registerUniform("lightColor[" + std::to_string(i) + "]");
+    registerUniform("attenuations[" + std::to_string(i) + "]");
+  }
+  
+}
+
+void StaticShader::loadTextureAtlasXYOffset(const glm::vec2& offset) {
+  auto location = mUniforms["textureAtlasXYOffset"];
   
   glUniform2f(location, offset.x, offset.y);
 }
 
-void StaticShader::loadNumTextureRows(float num, const std::string& numTextureRowsName) {
-  auto numTextureRowsLocation = mUniforms[numTextureRowsName];
+void StaticShader::loadNumTextureRows(float num) {
+  auto numTextureRowsLocation = mUniforms["numTextureRows"];
   
   glUniform1f(numTextureRowsLocation, num);
 }
 
-void StaticShader::loadUseFakeLighting(bool useFake, const std::string& useFakeLightingName) {
-  auto useFakeLightingLocation = mUniforms[useFakeLightingName];
+void StaticShader::loadUseFakeLighting(bool useFake) {
+  auto useFakeLightingLocation = mUniforms["useFakeLighting"];
   
   glUniform1f(useFakeLightingLocation, useFake ? 1.0 : 0.0);
 }
 
-void StaticShader::loadSkyColor(const glm::vec3& skyColor, const std::string& skyColorName) {
-  auto skyColorLocation = mUniforms[skyColorName];
+void StaticShader::loadSkyColor(const glm::vec3& skyColor) {
+  auto skyColorLocation = mUniforms["skyColor"];
   
   glUniform3f(skyColorLocation, skyColor.r, skyColor.g, skyColor.b);
 }
 
-void StaticShader::loadLight(const Light& light, const std::string& posName, const std::string& colName) {
-  auto lightPosLocation = mUniforms[posName],
-  lightColLocation = mUniforms[colName];
+void StaticShader::loadLights(const std::vector<Light>& lights) {
   
-  glUniform3f(lightPosLocation, light.mPosition.x, light.mPosition.y, light.mPosition.z);
-  glUniform3f(lightColLocation, light.mColor.r, light.mColor.g, light.mColor.b);
+  for (int i = 0; i < MAX_LIGHTS; ++i) {
+    auto iStr = std::to_string(i);
+    auto lightPosLocation = mUniforms["lightPosition[" + iStr + "]"];
+    auto lightColLocation = mUniforms["lightColor[" + iStr + "]"];
+    auto attLocation = mUniforms["attenuations[" + iStr + "]"];
+    if (i < lights.size()) {
+      auto light = lights.at(i);
+      
+      glUniform3f(lightPosLocation, light.mPosition.x, light.mPosition.y, light.mPosition.z);
+      glUniform3f(lightColLocation, light.mColor.r, light.mColor.g, light.mColor.b);
+      glUniform3f(attLocation, light.mAttenuation.x, light.mAttenuation.y, light.mAttenuation.z);
+    }
+    else {
+      glUniform3f(lightPosLocation, 0.0f, 0.0f, 0.0f);
+      glUniform3f(lightColLocation, 0.0f, 0.0f, 0.0f);
+      glUniform3f(attLocation, 1.0f, 0.0f, 0.0f);
+    }
+  }
+
 }
 
-void StaticShader::loadShineVariables(float shineDamper, float reflectivity, const std::string& damperName, const std::string& refName) {
-  auto shineDamperLocation = mUniforms[damperName],
-  reflectivityLocation = mUniforms[refName];
+void StaticShader::loadShineVariables(float shineDamper, float reflectivity) {
+  auto shineDamperLocation = mUniforms["shineDamper"],
+  reflectivityLocation = mUniforms["reflectivity"];
   
   glUniform1f(shineDamperLocation, shineDamper);
   glUniform1f(reflectivityLocation, reflectivity);
 }
-void StaticShader::loadAmbientFactor(float ambientFactor, const std::string& ambientName) {
-  auto ambientFactorLocation = mUniforms[ambientName];
+void StaticShader::loadAmbientFactor(float ambientFactor) {
+  auto ambientFactorLocation = mUniforms["ambientFactor"];
   
   glUniform1f(ambientFactorLocation, ambientFactor);
 }
 
-void StaticShader::loadProjectionMatrix(const glm::mat4& projectionMatrix, const std::string& projectionMatrixName) {
-  auto projectionMatrixLocation = mUniforms[projectionMatrixName];
+void StaticShader::loadProjectionMatrix(const glm::mat4& projectionMatrix) {
+  auto projectionMatrixLocation = mUniforms["projectionMatrix"];
   
   glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 }
 
-void StaticShader::loadViewMatrix(const glm::mat4& viewMatrix, const std::string& viewMatrixName) {
-  auto viewMatrixLocation = mUniforms[viewMatrixName];
+void StaticShader::loadViewMatrix(const glm::mat4& viewMatrix) {
+  auto viewMatrixLocation = mUniforms["viewMatrix"];
   
   glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
 }
 
-void StaticShader::loadModelMatrix(const glm::mat4& modelMatrix, const std::string& modelMatrixName) {
-  auto modelMatrixLocation = mUniforms[modelMatrixName];
+void StaticShader::loadModelMatrix(const glm::mat4& modelMatrix) {
+  auto modelMatrixLocation = mUniforms["modelMatrix"];
   
   glUniformMatrix4fv(modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 }

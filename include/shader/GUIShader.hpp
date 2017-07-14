@@ -7,7 +7,10 @@
 
 class GUIShader : public ShaderProgram {
 public:
-  void loadModelMatrix(const glm::mat4& modelMatrix, const std::string& modelMatrixName);
+  
+  void init(const std::string& vertexFilepath, const std::string& fragmentFilepath);
+  
+  void loadModelMatrix(const glm::mat4& modelMatrix);
 };
 
 #endif

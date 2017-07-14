@@ -4,34 +4,37 @@
 MasterRenderer::MasterRenderer() :
   mStaticShader(),
   mTerrainShader(),
-  mWindowHdl(nullptr),
   mEntityRenderer(),
   mTerrainRenderer(),
-  mSkyColor(glm::vec3{0.5f, 0.5f, 0.5f}) {
+  mSkyboxRenderer(),
+  mSkyColor(glm::vec3{0.1f, 0.1f, 0.1f}) {
 }
 
-MasterRenderer::MasterRenderer(GLFWwindow* window, const StaticShader& program, const TerrainShader& terrainShader) :
-  mStaticShader(program),
-  mTerrainShader(terrainShader),
-  mWindowHdl(window),
-  mEntityRenderer(window, program),
-  mTerrainRenderer(window, terrainShader),
-  mSkyColor(glm::vec3{0.5f, 0.5f, 0.5f}) {
-}
-
-void MasterRenderer::init() {
-  mEntityRenderer.mWindowHdl = mWindowHdl;
+void MasterRenderer::init(GLFWwindow* window, Loader& loader) {
   mEntityRenderer.mShaderProgram = mStaticShader;
-  mTerrainRenderer.mWindowHdl = mWindowHdl;
   mTerrainRenderer.mShaderProgram = mTerrainShader;
+  mSkyboxRenderer.mShaderProgram = mSkyboxShader;
   
-  glfwGetFramebufferSize(mWindowHdl, &mRenderWidth, &mRenderHeight);
+  glfwGetFramebufferSize(window, &mRenderWidth, &mRenderHeight);
   mProjectionMatrix = createProjectionMatrix(mRenderWidth, mRenderHeight);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
   glEnable(GL_DEPTH_TEST);
   mEntityRenderer.init(mProjectionMatrix);
   mTerrainRenderer.init(mProjectionMatrix);
+  mSkyboxRenderer.init(loader, mProjectionMatrix);
+  
+  mStaticShader.use();
+  mStaticShader.loadProjectionMatrix(mProjectionMatrix);
+  mStaticShader.loadAmbientFactor(0.2f);
+  mStaticShader.loadSkyColor(mSkyColor);
+  mStaticShader.disable();
+  
+  mTerrainShader.use();
+  mTerrainShader.loadProjectionMatrix(mProjectionMatrix);
+  mTerrainShader.loadAmbientFactor(0.2f);
+  mTerrainShader.loadSkyColor(mSkyColor);
+  mTerrainShader.disable();
 }
 
 void MasterRenderer::addTexturedModel(const TexturedModel& texturedModel) {
@@ -59,28 +62,30 @@ void MasterRenderer::addTerrain(const Terrain& terrain) {
   mTerrains.push_back(terrain);
 }
 
-void MasterRenderer::render(const Light& sun) {
+void MasterRenderer::update(double dt) {
+  mSkyboxRenderer.update(dt);
+  mEntityRenderer.mCamera.update(dt);
+}
+
+void MasterRenderer::render(const std::vector<Light>& lights) {
   prepare();
   
   auto viewMatrix = mEntityRenderer.mCamera.createViewMatrix();
   
   mStaticShader.use();
-  mStaticShader.loadProjectionMatrix(mProjectionMatrix, "projectionMatrix");
-  mStaticShader.loadLight(sun, "lightPosition", "lightColor");
-  mStaticShader.loadAmbientFactor(0.2f, "ambientFactor");
-  mStaticShader.loadViewMatrix(viewMatrix, "viewMatrix");
-  mStaticShader.loadSkyColor(mSkyColor, "skyColor");
+  mStaticShader.loadLights(lights);
+  mStaticShader.loadViewMatrix(viewMatrix);
   mEntityRenderer.render(mEntities);
   mStaticShader.disable();
   
   mTerrainShader.use();
-  mTerrainShader.loadLight(sun, "lightPosition", "lightColor");
-  mTerrainShader.loadAmbientFactor(0.2f, "ambientFactor");
-  mTerrainShader.loadViewMatrix(viewMatrix, "viewMatrix");
-  mTerrainShader.loadSkyColor(mSkyColor, "skyColor");
+  mTerrainShader.loadLights(lights);
+  mTerrainShader.loadViewMatrix(viewMatrix);
   mTerrainRenderer.render(mTerrains);
   mTerrainShader.disable();
   
+  mSkyboxRenderer.render(mEntityRenderer.mCamera, mSkyColor);
+
 }
 
 void MasterRenderer::prepare() {

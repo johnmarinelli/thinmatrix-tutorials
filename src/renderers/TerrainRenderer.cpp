@@ -12,20 +12,12 @@
 #include "Camera.hpp"
 #include "Terrain.hpp"
 
-TerrainRenderer::TerrainRenderer() :
-  mWindowHdl(nullptr){
+TerrainRenderer::TerrainRenderer() {
 }
-
-TerrainRenderer::TerrainRenderer(GLFWwindow* window, const TerrainShader& shader) :
-  mWindowHdl(window),
-  mShaderProgram(shader) {
-}
-
 
 void TerrainRenderer::init(const glm::mat4& projMatrix) {
   mProjectionMatrix = projMatrix;
   mShaderProgram.use();
-  mShaderProgram.loadProjectionMatrix(mProjectionMatrix, "projectionMatrix");
   mShaderProgram.connectTextureUnits();
   mShaderProgram.disable();
 }
@@ -50,7 +42,7 @@ void TerrainRenderer::prepareTerrain(const Terrain& model) {
   }
   
   bindTextures(model);
-  mShaderProgram.loadShineVariables(100.0f, 0.0f, "shineDamper", "reflectivity");
+  mShaderProgram.loadShineVariables(1.0f, 0.0f);
 }
 
 void TerrainRenderer::bindTextures(const Terrain& terrain) {
@@ -84,7 +76,7 @@ void TerrainRenderer::prepareInstance(const Terrain& terrain) {
   glm::mat4 modelMatrix{1.0f};
   modelMatrix = glm::scale(modelMatrix, glm::vec3{1.0f});
   modelMatrix = glm::translate(modelMatrix, glm::vec3{terrain.mX, 0.0f, terrain.mZ});
-  mShaderProgram.loadModelMatrix(modelMatrix, "modelMatrix");
+  mShaderProgram.loadModelMatrix(modelMatrix);
 }
 
 void TerrainRenderer::cleanUp() {

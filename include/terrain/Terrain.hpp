@@ -65,7 +65,7 @@ public:
   
   RawModel generateTerrain(Loader& loader, const std::string& filepath);
   
-  png_bytep* readPNG(const std::string& fn, int& width, int& height);
+  //png_bytep* readPNG(const std::string& fn, int& width, int& height);
 };
 
 #endif

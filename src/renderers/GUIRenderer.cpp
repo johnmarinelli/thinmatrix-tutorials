@@ -13,8 +13,9 @@ GUIRenderer::GUIRenderer(Loader& loader) {
 
 GUIShader GUIRenderer::loadGUIShader() {
   GUIShader shaderProgram;
-  shaderProgram.initFromFiles("resources/shaders/gui.vert", "resources/shaders/gui.frag");
-  shaderProgram.registerUniform("modelMatrix");    return shaderProgram;
+  shaderProgram.init("resources/shaders/gui.vert", "resources/shaders/gui.frag");
+  
+  return shaderProgram;
 }
 
 void GUIRenderer::render(const std::vector<GUITexture>& guis) {
@@ -34,7 +35,7 @@ void GUIRenderer::render(const std::vector<GUITexture>& guis) {
     glm::mat4 modelMatrix{1.0f};
     modelMatrix = glm::translate(modelMatrix, glm::vec3{gui.mPosition.x, gui.mPosition.y, 0.0});
     modelMatrix = glm::scale(modelMatrix, glm::vec3{gui.mScale.x, gui.mScale.y, 1.0});
-    mShaderProgram.loadModelMatrix(modelMatrix, "modelMatrix");
+    mShaderProgram.loadModelMatrix(modelMatrix);
     
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   }

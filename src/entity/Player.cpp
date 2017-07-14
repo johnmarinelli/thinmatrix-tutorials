@@ -35,7 +35,7 @@ void Player::update(double dt, const Terrain& terrain) {
     mPosition.y = terrainHeight;
     mIsInAir = false;
   }
-  //std::cout << "Player position: " << mPosition.x << ", " << mPosition.y << ", " << mPosition.z << '\n';
+  std::cout << "Player position: " << mPosition.x << ", " << mPosition.y << ", " << mPosition.z << '\n';
 }
 
 void Player::handleInput(PlayerMovementDirection dir, int state) {

@@ -18,18 +18,6 @@ Entity::Entity(const TexturedModel& model, int texIndex, const glm::vec3& pos, c
   mScale(scl) {
 }
 
-void Entity::increasePosition(const glm::vec3& d) {
-  mPosition += d;
-}
-
-void Entity::increaseRotation(const glm::vec3& d) {
-  mRotation += d;
-}
-
-void Entity::increaseScale(const glm::vec3& d) {
-  mScale += d;
-}
-
 float Entity::getTextureXOffset() {
   int numTexRows = mModel.mModelTexture.mNumberOfRows;
   int col = mTextureIndex % numTexRows;

@@ -1,18 +1,12 @@
 #include "EntityRenderer.hpp"
 
-EntityRenderer::EntityRenderer() :
-  mWindowHdl(nullptr) {
-}
-
-EntityRenderer::EntityRenderer(GLFWwindow* window, const StaticShader& program) :
-  mWindowHdl(window),
-  mShaderProgram(program) {
+EntityRenderer::EntityRenderer() {
 }
 
 void EntityRenderer::init(const glm::mat4& projMatrix) {
   mProjectionMatrix = projMatrix;
   mShaderProgram.use();
-  mShaderProgram.loadProjectionMatrix(mProjectionMatrix, "projectionMatrix");
+  mShaderProgram.loadProjectionMatrix(mProjectionMatrix);
   mShaderProgram.disable();
 }
 
@@ -47,9 +41,9 @@ void EntityRenderer::prepareTexturedModel(const TexturedModel& model) {
     disableCulling();
   }
   
-  mShaderProgram.loadShineVariables(texture.mShineDamper, texture.mReflectivity, "shineDamper", "reflectivity");
-  mShaderProgram.loadUseFakeLighting(texture.mUseFakeLighting, "useFakeLighting");
-  mShaderProgram.loadNumTextureRows(texture.mNumberOfRows, "numTextureRows");
+  mShaderProgram.loadShineVariables(texture.mShineDamper, texture.mReflectivity);
+  mShaderProgram.loadUseFakeLighting(texture.mUseFakeLighting);
+  mShaderProgram.loadNumTextureRows(texture.mNumberOfRows);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, model.mModelTexture.mTextureID);
 }
@@ -68,8 +62,8 @@ void EntityRenderer::prepareInstance(std::shared_ptr<Entity> entity) {
   modelMatrix = glm::translate(modelMatrix, entity->mPosition);
   modelMatrix = glm::rotate(modelMatrix, toRadians(entity->mRotationAngle), entity->mRotation);
   modelMatrix = glm::scale(modelMatrix, entity->mScale);
-  mShaderProgram.loadModelMatrix(modelMatrix, "modelMatrix");
-  mShaderProgram.loadTextureAtlasXYOffset(glm::vec2{entity->getTextureXOffset(), entity->getTextureYOffset()}, "textureAtlasXYOffset");
+  mShaderProgram.loadModelMatrix(modelMatrix);
+  mShaderProgram.loadTextureAtlasXYOffset(glm::vec2{entity->getTextureXOffset(), entity->getTextureYOffset()});
 }
 
 void EntityRenderer::enableCulling() {

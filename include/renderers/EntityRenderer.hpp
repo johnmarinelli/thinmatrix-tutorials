@@ -14,10 +14,8 @@ class GLFWwindow;
 
 class EntityRenderer {
 public:
-  typedef std::map<TexturedModelType, std::pair<TexturedModel, std::vector<std::shared_ptr<Entity>>>> TexturedEntityMap;
 
   EntityRenderer();
-  EntityRenderer(GLFWwindow* window, const StaticShader& program);
 
   void init(const glm::mat4& projMatrix);
   
@@ -32,7 +30,6 @@ public:
   void disableCulling();
   void cleanUp();
   
-  GLFWwindow* mWindowHdl;
   StaticShader mShaderProgram;
   Camera mCamera;
   glm::mat4 mProjectionMatrix;

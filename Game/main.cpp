@@ -22,12 +22,11 @@
 #include "TerrainTexturePack.hpp"
 #include "Timer.hpp"
 #include "GUIRenderer.hpp"
-
-const int WIDTH = 640;
-const int HEIGHT = 480;
+#include "MousePicker.hpp"
 
 std::shared_ptr<Player> player;
 MasterRenderer masterRenderer;
+MousePicker mousePicker;
 double lastMouseXPosition = -1.0;
 double lastMouseYPosition = -1.0;
 bool leftMouseButtonDown = false;
@@ -47,7 +46,12 @@ static void mouseButtonCallback(GLFWwindow* window, int button, int action, int 
     if (GLFW_RELEASE == action) rightMouseButtonDown = false;
   }
   if (GLFW_MOUSE_BUTTON_LEFT == button) {
-    if (GLFW_PRESS == action) leftMouseButtonDown = true;
+    if (GLFW_PRESS == action) {
+      leftMouseButtonDown = true;
+      double xPos, yPos;
+      glfwGetCursorPos(window, &xPos, &yPos);
+      mousePicker.calculateMouseRay((float) xPos, (float) yPos);
+    }
     if (GLFW_RELEASE == action) leftMouseButtonDown = false;
   }
   
@@ -105,47 +109,24 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
   }
 }
 
-StaticShader loadShaders() {
+StaticShader loadStaticShader() {
   StaticShader shaderProgram;
-  shaderProgram.initFromFiles("resources/shaders/game.vert", "resources/shaders/game.frag");
-  
-  shaderProgram.registerUniform("projectionMatrix");
-  shaderProgram.registerUniform("viewMatrix");
-  shaderProgram.registerUniform("modelMatrix");
-  shaderProgram.registerUniform("lightPosition");
-  shaderProgram.registerUniform("lightColor");
-  shaderProgram.registerUniform("shineDamper");
-  shaderProgram.registerUniform("reflectivity");
-  shaderProgram.registerUniform("ambientFactor");
-  shaderProgram.registerUniform("useFakeLighting");
-  shaderProgram.registerUniform("skyColor");
-  shaderProgram.registerUniform("numTextureRows");
-  shaderProgram.registerUniform("textureAtlasXYOffset");
-  
+  shaderProgram.init("resources/shaders/game.vert", "resources/shaders/game.frag");
   return shaderProgram;
 }
 
 TerrainShader loadTerrainShader() {
   TerrainShader shaderProgram;
-  shaderProgram.initFromFiles("resources/shaders/terrain.vert", "resources/shaders/terrain.frag");
-  
-  shaderProgram.registerUniform("projectionMatrix");
-  shaderProgram.registerUniform("viewMatrix");
-  shaderProgram.registerUniform("modelMatrix");
-  shaderProgram.registerUniform("lightPosition");
-  shaderProgram.registerUniform("lightColor");
-  shaderProgram.registerUniform("shineDamper");
-  shaderProgram.registerUniform("reflectivity");
-  shaderProgram.registerUniform("ambientFactor");
-  shaderProgram.registerUniform("skyColor");
-  shaderProgram.registerUniform("backgroundTexture");
-  shaderProgram.registerUniform("rTexture");
-  shaderProgram.registerUniform("gTexture");
-  shaderProgram.registerUniform("bTexture");
-  shaderProgram.registerUniform("blendMap");
-  
+  shaderProgram.init("resources/shaders/terrain.vert", "resources/shaders/terrain.frag");
   return shaderProgram;
 }
+
+SkyboxShader loadSkyboxShader() {
+  SkyboxShader shaderProgram;
+  shaderProgram.init("resources/shaders/skybox.vert", "resources/shaders/skybox.frag");
+  return shaderProgram;
+}
+
 
 
 static GLFWwindow* initGLFW() {
@@ -159,7 +140,7 @@ static GLFWwindow* initGLFW() {
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   
-  window = glfwCreateWindow(WIDTH, HEIGHT, "Game", NULL, NULL);
+  window = glfwCreateWindow(VIEWPORT_WIDTH, VIEWPORT_HEIGHT, "Game", NULL, NULL);
   
   if (!window) {
     glfwTerminate();
@@ -235,7 +216,7 @@ void registerEntity(const std::shared_ptr<Entity> entity, MasterRenderer& master
 }
 
 void generateFerns(MasterRenderer& masterRenderer, const TexturedModel& fernTexModel) {
-  int numFerns = 800;
+  int numFerns = 400;
   
   for (auto i = 0; i < numFerns; ++i) {
     auto rx = random(0.0f, 800.0f);
@@ -263,60 +244,98 @@ int main(int argc, const char * argv[]) {
   GLuint bTexture = loader.loadTexture("resources/textures/path.png");
   GLuint blendMap = loader.loadTexture("resources/textures/blendMap.png");
   
+  /*
+   * Texture pack for terrain
+   */
   TerrainTexturePack texturePack{bgTexture, rTexture, gTexture, bTexture};
   Terrain terrain{0, 0, loader, texturePack, blendMap, "resources/textures/heightmap.png"};
   masterRenderer.addTerrain(terrain);
   
-  StaticShader staticShader = loadShaders();
+  /*
+   * Lights
+   */
+  StaticShader staticShader = loadStaticShader();
   TerrainShader terrainShader = loadTerrainShader();
-  glm::vec3 lightPos{10.0f, 5000.0f, -400.0f};
-  glm::vec3 lightCol{1.0f, 1.0f, 1.0f};
-  Light light{lightPos, lightCol};
+  SkyboxShader skyboxShader = loadSkyboxShader();
+  glm::vec3 lightPos0{0.0f, 10000.0f, -7000.0f};
+  glm::vec3 lightCol0{0.4f, 0.4f, 0.4f};
+  Light light0{lightPos0, lightCol0};
   
+  glm::vec3 lightPos1{185.0f, -4.7f, 23.0f};
+  glm::vec3 lightCol1{3.0f, 0.0f, 0.0f};
+  glm::vec3 attenuation1{1.0f, 0.01f, 0.002f};
+  Light light1{lightPos1, lightCol1, attenuation1};
+  
+  glm::vec3 lightPos2{370.0f, 17.0f, 300.0f};
+  glm::vec3 lightCol2{0.0f, 2.0f, 2.0f};
+  glm::vec3 attenuation2{1.0f, 0.01f, 0.002f};
+  Light light2{lightPos2, lightCol2, attenuation2};
+  
+  glm::vec3 lightPos3{293.0f, 7.0f, 305.0f};
+  glm::vec3 lightCol3{2.0f, 2.0f, 0.0f};
+  glm::vec3 attenuation3{1.0f, 0.01f, 0.002f};
+  Light light3{lightPos3, lightCol3, attenuation3};
+  
+  std::vector<Light> lights{light0, light1, light2, light3};
+  
+  /*
+   * Models
+   */
   ObjLoader objLoader;
-  masterRenderer.mWindowHdl = window;
   masterRenderer.mStaticShader = staticShader;
   masterRenderer.mTerrainShader = terrainShader;
-  masterRenderer.init();
+  masterRenderer.mSkyboxShader = skyboxShader;
+  masterRenderer.init(window, loader);
   
   RawModel dragon = loadModel("resources/meshes/dragon.obj", objLoader, loader);
   RawModel fern = loadModel("resources/meshes/fern.obj", objLoader, loader);
   RawModel grass = loadModel("resources/meshes/grassModel.obj", objLoader, loader);
   RawModel playerModel = loadModel("resources/meshes/player.obj", objLoader, loader);
+  RawModel lamp = loadModel("resources/meshes/lamp.obj", objLoader, loader);
 
-  ModelTexture modelTexture = loadModelTexture("resources/textures/scales.png", loader, {10.0f, 1.0f, false, false});
-  ModelTexture fernTexture = loadModelTexture("resources/textures/fern.png", loader, {10.0f, 1.0f, true, false, 2});
-  ModelTexture grassTexture = loadModelTexture("resources/textures/grassTexture.png", loader, {10.0f, 1.0f, true, true});
-  ModelTexture playerTexture = loadModelTexture("resources/textures/playerTexture.png", loader, {10.0f, 1.0f, false, false});
+  ModelTexture modelTexture = loadModelTexture("resources/textures/scales.png", loader, {1.0f, 1.0f, false, false});
+  ModelTexture fernTexture = loadModelTexture("resources/textures/fern.png", loader, {1.0f, 1.0f, true, false, 2});
+  ModelTexture grassTexture = loadModelTexture("resources/textures/grassTexture.png", loader, {1.0f, 1.0f, true, true});
+  ModelTexture playerTexture = loadModelTexture("resources/textures/playerTexture.png", loader, {1.0f, 1.0f, false, false});
+  ModelTexture lampTexture = loadModelTexture("resources/textures/lamp.png", loader, {1.0f, 1.0f, false, false});
   
   TexturedModel texturedModel{dragon, modelTexture, TexturedModelType::DRAGON};
   TexturedModel fernTexturedModel{fern, fernTexture, TexturedModelType::FERN};
   TexturedModel grassTexturedModel{grass, grassTexture, TexturedModelType::GRASS};
   TexturedModel playerTexturedModel{playerModel, playerTexture, TexturedModelType::PLAYER};
+  TexturedModel lampTexturedModel{lamp, lampTexture, TexturedModelType::LAMP};
 
   auto entity = createEntity(texturedModel, glm::vec3{50.0f, 0.0f, 30.0f});
   auto fernEntity = createEntity(fernTexturedModel, glm::vec3{75.0f, 0.0f, 25.0f});
   auto grassEntity = createEntity(grassTexturedModel, glm::vec3{25.0f, 0.0f, 25.0f});
+  auto lampEntity = createEntity(lampTexturedModel, glm::vec3{185.0f, -4.7f, 23.0f});
+  auto lampEntity2 = createEntity(lampTexturedModel, glm::vec3{370.0f, 17.0f, 300.0f});
+  auto lampEntity3 = createEntity(lampTexturedModel, glm::vec3{293.0f, 7.0f, 305.0f});
   masterRenderer.addTexturedModel(texturedModel);
   masterRenderer.addTexturedModel(fernTexturedModel);
   masterRenderer.addTexturedModel(grassTexturedModel);
   masterRenderer.addTexturedModel(playerTexturedModel);
+  masterRenderer.addTexturedModel(lampTexturedModel);
   
   registerEntity(entity, masterRenderer, TexturedModelType::DRAGON);
   registerEntity(fernEntity, masterRenderer, TexturedModelType::FERN);
   registerEntity(grassEntity, masterRenderer, TexturedModelType::GRASS);
+  registerEntity(lampEntity, masterRenderer, TexturedModelType::LAMP);
+  registerEntity(lampEntity2, masterRenderer, TexturedModelType::LAMP);
+  registerEntity(lampEntity3, masterRenderer, TexturedModelType::LAMP);
   
   generateFerns(masterRenderer, fernTexturedModel);
 
-  player = std::make_shared<Player>(playerTexturedModel, glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
+  player = std::make_shared<Player>(playerTexturedModel, glm::vec3{200.0f, 10.0f, 290.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
   masterRenderer.mEntityRenderer.mCamera.mPlayerHdl = player;
   registerEntity(player, masterRenderer, TexturedModelType::PLAYER);
   
   std::vector<GUITexture> guis;
-  GUITexture gui{loader.loadTexture("resources/textures/puppy.png"), glm::vec2{0.5f, 0.5f}, glm::vec2{0.25f, 0.25f}};
+  GUITexture gui{loader.loadTexture("resources/textures/puppy.png"), glm::vec2{0.9f, 0.9f}, glm::vec2{0.2f, 0.2f}};
   guis.push_back(gui);
   
   GUIRenderer guiRenderer{loader};
+  mousePicker.init(masterRenderer.mProjectionMatrix, masterRenderer.mEntityRenderer.mCamera, masterRenderer.mTerrains[0]);
   
   while (!glfwWindowShouldClose(window)) {
     timer.update();
@@ -327,10 +346,11 @@ int main(int argc, const char * argv[]) {
     while (delta > 0.0) {
       dt = std::min(delta, timer.DT);
       player->update(dt, masterRenderer.mTerrains[0]);
-      masterRenderer.mEntityRenderer.mCamera.update(dt);
+      masterRenderer.update(dt);
+      mousePicker.update(masterRenderer.mEntityRenderer.mCamera.createViewMatrix());
       delta -= dt;      
     }
-    masterRenderer.render(light);
+    masterRenderer.render(lights);
     guiRenderer.render(guis);
     
     glfwSwapBuffers(window);

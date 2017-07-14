@@ -26,6 +26,7 @@ public:
                      int numIndices);
   
   RawModel loadQuadToVAO(GLfloat positions[]);
+  RawModel loadCubeToVAO(GLfloat positions[]);
   
   GLuint createVAO();
   
@@ -34,6 +35,8 @@ public:
   void bindIndicesBuffer(GLuint indices[], GLuint numIndices);
   
   GLint loadTexture(const std::string& filename);
+  
+  GLuint loadCubemap(const std::vector<std::string>& facesFilepaths);
   
   void unbindVAO();
   void cleanUp();
