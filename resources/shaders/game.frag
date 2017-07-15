@@ -29,6 +29,7 @@ void main(void) {
   
   vec3 totalDiffuse = vec3(0.0);
   vec3 totalSpecular = vec3(0.0);
+  vec3 unitCameraDir = normalize(cameraDir);
   
   for (int i = 0; i < 4; ++i) {
     vec3 unitNormal = normalize(worldNormal);
@@ -37,7 +38,6 @@ void main(void) {
     float distanceToLight = length(toLightDir[i]);
     // attenuation[0] + (attenuation[1] * distance) + (at
     float attenuationFactor = attenuations[i].x + (attenuations[i].y * distanceToLight) + (attenuations[i].z * pow(distanceToLight, 2.0));
-    vec3 unitCameraDir = normalize(cameraDir);
     vec3 lightDir = -unitToLightDir;
     
     vec3 reflectedLightDir = reflect(lightDir, unitNormal);

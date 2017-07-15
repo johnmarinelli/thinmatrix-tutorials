@@ -4,9 +4,11 @@
 MasterRenderer::MasterRenderer() :
   mStaticShader(),
   mTerrainShader(),
+  mNormalShader(),
   mEntityRenderer(),
   mTerrainRenderer(),
   mSkyboxRenderer(),
+  mNormalRenderer(),
   mSkyColor(glm::vec3{0.1f, 0.1f, 0.1f}) {
 }
 
@@ -14,6 +16,7 @@ void MasterRenderer::init(GLFWwindow* window, Loader& loader) {
   mEntityRenderer.mShaderProgram = mStaticShader;
   mTerrainRenderer.mShaderProgram = mTerrainShader;
   mSkyboxRenderer.mShaderProgram = mSkyboxShader;
+  mNormalRenderer.mShaderProgram = mNormalShader;
   
   glfwGetFramebufferSize(window, &mRenderWidth, &mRenderHeight);
   mProjectionMatrix = createProjectionMatrix(mRenderWidth, mRenderHeight);
@@ -23,6 +26,7 @@ void MasterRenderer::init(GLFWwindow* window, Loader& loader) {
   mEntityRenderer.init(mProjectionMatrix);
   mTerrainRenderer.init(mProjectionMatrix);
   mSkyboxRenderer.init(loader, mProjectionMatrix);
+  mNormalRenderer.init(mProjectionMatrix, mEntityRenderer.mCamera);
   
   mStaticShader.use();
   mStaticShader.loadProjectionMatrix(mProjectionMatrix);
@@ -48,6 +52,17 @@ void MasterRenderer::addTexturedModel(const TexturedModel& texturedModel) {
   }
 }
 
+void MasterRenderer::addNormalTexturedModel(const TexturedModel& texturedModel) {
+  auto texturedModelType = texturedModel.mModelType;
+  if (mNormalEntities.find(texturedModelType) == mNormalEntities.end()) {
+    mNormalEntities[texturedModelType] = std::pair<TexturedModel, std::vector<std::shared_ptr<Entity>>>{texturedModel, std::vector<std::shared_ptr<Entity>>{}};
+  }
+  else {
+    auto typeStr = textureModelStrings[texturedModelType];
+    throw std::runtime_error("Texture model type: " + typeStr + " already added.");
+  }
+}
+
 void MasterRenderer::addEntity(std::shared_ptr<Entity> entity, TexturedModelType texturedModelType) {
   if (mEntities.find(texturedModelType) == mEntities.end()) {
     auto typeStr = textureModelStrings[texturedModelType];
@@ -55,6 +70,16 @@ void MasterRenderer::addEntity(std::shared_ptr<Entity> entity, TexturedModelType
   }
   else {
     mEntities[texturedModelType].second.push_back(entity);
+  }
+}
+
+void MasterRenderer::addNormalEntity(std::shared_ptr<Entity> entity, TexturedModelType texturedModelType) {
+  if (mNormalEntities.find(texturedModelType) == mNormalEntities.end()) {
+    auto typeStr = textureModelStrings[texturedModelType];
+    throw std::runtime_error("Texture model type: " + typeStr + " hasn't been added.");
+  }
+  else {
+    mNormalEntities[texturedModelType].second.push_back(entity);
   }
 }
 
@@ -77,6 +102,8 @@ void MasterRenderer::render(const std::vector<Light>& lights) {
   mStaticShader.loadViewMatrix(viewMatrix);
   mEntityRenderer.render(mEntities);
   mStaticShader.disable();
+
+  mNormalRenderer.render(mNormalEntities, lights, mSkyColor);
   
   mTerrainShader.use();
   mTerrainShader.loadLights(lights);
@@ -109,4 +136,5 @@ glm::mat4 MasterRenderer::createProjectionMatrix(int width, int height) const {
 void MasterRenderer::cleanUp() {
   mEntityRenderer.cleanUp();
   mTerrainRenderer.cleanUp();
+  mNormalRenderer.cleanUp();
 }

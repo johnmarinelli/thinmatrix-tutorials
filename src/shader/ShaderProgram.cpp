@@ -11,6 +11,8 @@ void ShaderProgram::initFromFiles(std::string vertexShaderFilename, std::string 
   std::string vertexShaderSource = loadShaderFromFile(vertexShaderFilename);
   std::string fragmentShaderSource = loadShaderFromFile(fragmentShaderFilename);
   
+  std::cout << "Initializing shader from " << vertexShaderFilename << " and " << fragmentShaderFilename << '\n';
+  
   initialize(vertexShaderSource, fragmentShaderSource);
   use();
 }

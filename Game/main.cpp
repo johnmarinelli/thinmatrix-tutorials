@@ -16,6 +16,7 @@
 #include "TexturedModel.hpp"
 #include "Entity.hpp"
 #include "ObjLoader.hpp"
+#include "NormalObjLoader.hpp"
 #include "Light.hpp"
 #include "Player.hpp"
 #include "Terrain.hpp"
@@ -127,11 +128,14 @@ SkyboxShader loadSkyboxShader() {
   return shaderProgram;
 }
 
-
+NormalShader loadNormalShader() {
+  NormalShader shaderProgram;
+  shaderProgram.init("resources/shaders/normal.vert", "resources/shaders/normal.frag");
+  return shaderProgram;
+}
 
 static GLFWwindow* initGLFW() {
   GLFWwindow* window;
-  glfwSetErrorCallback(errorCallback);
   
   if (!glfwInit()) exit(EXIT_FAILURE);
   
@@ -153,6 +157,7 @@ static GLFWwindow* initGLFW() {
   glfwSetScrollCallback(window, scrollCallback);
   glfwSetMouseButtonCallback(window, mouseButtonCallback);
   glfwSetCursorPosCallback(window, cursorPositionCallback);
+  glfwSetErrorCallback(errorCallback);
   
   glfwMakeContextCurrent(window);
   
@@ -170,6 +175,22 @@ RawModel loadModel(const std::string& filepath, ObjLoader& objLoader, Loader& lo
                                     (int) data.mVertices.size(),
                                     (int) data.mNormals.size(),
                                     (int) data.mTextureCoords.size(),
+                                    (int) data.mIndices.size());
+  return model;
+}
+
+RawModel loadNormalModel(const std::string& filepath, NormalObjLoader& objLoader, Loader& loader) {
+  ModelDataNM data = objLoader.loadObj(filepath);
+
+  RawModel model = loader.loadToVAO((GLfloat*) &data.mVertices[0],
+                                    (GLfloat*) &data.mNormals[0],
+                                    (GLfloat*) &data.mTextureCoords[0],
+                                    (GLfloat*) &data.mTangents[0],
+                                    (GLuint*) &data.mIndices[0],
+                                    (int) data.mVertices.size(),
+                                    (int) data.mNormals.size(),
+                                    (int) data.mTextureCoords.size(),
+                                    (int) data.mTangents.size(),
                                     (int) data.mIndices.size());
   return model;
 }
@@ -215,6 +236,14 @@ void registerEntity(const std::shared_ptr<Entity> entity, MasterRenderer& master
   masterRenderer.addEntity(entity, texturedModelType);
 }
 
+void registerNormalEntity(const std::shared_ptr<Entity> entity, MasterRenderer& masterRenderer, TexturedModelType texturedModelType) {
+  // quick & dirty way to ensure entity is rendered at terrain height
+  // TODO: change this later
+  //entity->mPosition.y = masterRenderer.mTerrains[0].getHeightAtCoord(entity->mPosition.x, entity->mPosition.z);
+  
+  masterRenderer.addNormalEntity(entity, texturedModelType);
+}
+
 void generateFerns(MasterRenderer& masterRenderer, const TexturedModel& fernTexModel) {
   int numFerns = 400;
   
@@ -257,8 +286,9 @@ int main(int argc, const char * argv[]) {
   StaticShader staticShader = loadStaticShader();
   TerrainShader terrainShader = loadTerrainShader();
   SkyboxShader skyboxShader = loadSkyboxShader();
+  NormalShader normalShader = loadNormalShader();
   glm::vec3 lightPos0{0.0f, 10000.0f, -7000.0f};
-  glm::vec3 lightCol0{0.4f, 0.4f, 0.4f};
+  glm::vec3 lightCol0{0.7f, 0.7f, 0.7f};
   Light light0{lightPos0, lightCol0};
   
   glm::vec3 lightPos1{185.0f, -4.7f, 23.0f};
@@ -277,14 +307,17 @@ int main(int argc, const char * argv[]) {
   Light light3{lightPos3, lightCol3, attenuation3};
   
   std::vector<Light> lights{light0, light1, light2, light3};
-  
+
   /*
    * Models
    */
   ObjLoader objLoader;
+  NormalObjLoader normalObjLoader;
+  
   masterRenderer.mStaticShader = staticShader;
   masterRenderer.mTerrainShader = terrainShader;
   masterRenderer.mSkyboxShader = skyboxShader;
+  masterRenderer.mNormalShader = normalShader;
   masterRenderer.init(window, loader);
   
   RawModel dragon = loadModel("resources/meshes/dragon.obj", objLoader, loader);
@@ -292,18 +325,22 @@ int main(int argc, const char * argv[]) {
   RawModel grass = loadModel("resources/meshes/grassModel.obj", objLoader, loader);
   RawModel playerModel = loadModel("resources/meshes/player.obj", objLoader, loader);
   RawModel lamp = loadModel("resources/meshes/lamp.obj", objLoader, loader);
-
+  RawModel barrel = loadNormalModel("resources/meshes/barrel.obj", normalObjLoader, loader);
+  
   ModelTexture modelTexture = loadModelTexture("resources/textures/scales.png", loader, {1.0f, 1.0f, false, false});
-  ModelTexture fernTexture = loadModelTexture("resources/textures/fern.png", loader, {1.0f, 1.0f, true, false, 2});
+  ModelTexture fernTexture = loadModelTexture("resources/textures/fern.png", loader, {1.0f, 0.0f, true, false, 2});
   ModelTexture grassTexture = loadModelTexture("resources/textures/grassTexture.png", loader, {1.0f, 1.0f, true, true});
   ModelTexture playerTexture = loadModelTexture("resources/textures/playerTexture.png", loader, {1.0f, 1.0f, false, false});
   ModelTexture lampTexture = loadModelTexture("resources/textures/lamp.png", loader, {1.0f, 1.0f, false, false});
+  ModelTexture barrelTexture = loadModelTexture("resources/textures/barrel.png", loader, {10.0f, 0.5f, false, false});
   
   TexturedModel texturedModel{dragon, modelTexture, TexturedModelType::DRAGON};
   TexturedModel fernTexturedModel{fern, fernTexture, TexturedModelType::FERN};
   TexturedModel grassTexturedModel{grass, grassTexture, TexturedModelType::GRASS};
   TexturedModel playerTexturedModel{playerModel, playerTexture, TexturedModelType::PLAYER};
   TexturedModel lampTexturedModel{lamp, lampTexture, TexturedModelType::LAMP};
+  TexturedModel barrelTexturedModel{barrel, barrelTexture, TexturedModelType::BARREL};
+  barrelTexturedModel.mModelTexture.mNormalMapID = loader.loadTexture("resources/textures/barrelNormal.png");
 
   auto entity = createEntity(texturedModel, glm::vec3{50.0f, 0.0f, 30.0f});
   auto fernEntity = createEntity(fernTexturedModel, glm::vec3{75.0f, 0.0f, 25.0f});
@@ -311,11 +348,14 @@ int main(int argc, const char * argv[]) {
   auto lampEntity = createEntity(lampTexturedModel, glm::vec3{185.0f, -4.7f, 23.0f});
   auto lampEntity2 = createEntity(lampTexturedModel, glm::vec3{370.0f, 17.0f, 300.0f});
   auto lampEntity3 = createEntity(lampTexturedModel, glm::vec3{293.0f, 7.0f, 305.0f});
+  auto barrelEntity = createEntity(barrelTexturedModel, glm::vec3{210.0f, 10.0f, 300.0f});
+  
   masterRenderer.addTexturedModel(texturedModel);
   masterRenderer.addTexturedModel(fernTexturedModel);
   masterRenderer.addTexturedModel(grassTexturedModel);
   masterRenderer.addTexturedModel(playerTexturedModel);
   masterRenderer.addTexturedModel(lampTexturedModel);
+  masterRenderer.addNormalTexturedModel(barrelTexturedModel);
   
   registerEntity(entity, masterRenderer, TexturedModelType::DRAGON);
   registerEntity(fernEntity, masterRenderer, TexturedModelType::FERN);
@@ -323,6 +363,7 @@ int main(int argc, const char * argv[]) {
   registerEntity(lampEntity, masterRenderer, TexturedModelType::LAMP);
   registerEntity(lampEntity2, masterRenderer, TexturedModelType::LAMP);
   registerEntity(lampEntity3, masterRenderer, TexturedModelType::LAMP);
+  registerNormalEntity(barrelEntity, masterRenderer, TexturedModelType::BARREL);
   
   generateFerns(masterRenderer, fernTexturedModel);
 
@@ -359,6 +400,8 @@ int main(int argc, const char * argv[]) {
     
     if (0 != glErr) {
       std::cout << "OPENGL ERROR! code: " << glErr << '\n';
+      const GLubyte *errString = gluErrorString(glErr);
+      std::cout << errString << '\n';
     }
   }
   

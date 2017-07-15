@@ -9,6 +9,7 @@ public:
   ModelTexture();  
   ModelTexture(GLint texID);
   
+  GLint mNormalMapID;
   GLint mTextureID;
   float mShineDamper;
   float mReflectivity;

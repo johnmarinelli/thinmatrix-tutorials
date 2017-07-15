@@ -23,13 +23,13 @@ public:
   
   void init(const glm::mat4& projMatrix, Camera& camera);
   
-  void render(const TexturedEntityMap& entities, const glm::vec4& clipPlane, const std::vector<Light>& lights);
+  void render(const TexturedEntityMap& entities, const std::vector<Light>& lights, const glm::vec3& skyColor);
   
   void prepareTexturedModel(const TexturedModel& model);
   void unbindTexturedModel(const TexturedModel& model);
 
   void prepareInstance(std::shared_ptr<Entity> entity);
-  void prepare(const glm::vec4& clipPlane, const std::vector<Light>& lights, const glm::vec3& fogColor);
+  void prepare(const std::vector<Light>& lights, const glm::vec3& skyColor);
   void cleanUp();
 };
 

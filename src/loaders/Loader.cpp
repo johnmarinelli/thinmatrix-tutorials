@@ -28,6 +28,34 @@ RawModel Loader::loadToVAO(GLfloat positions[],
   return model;
 }
 
+RawModel Loader::loadToVAO(GLfloat positions[],
+                           GLfloat normals[],
+                           GLfloat texCoords[],
+                           GLfloat tangents[],
+                           GLuint indices[],
+                           int numVertices,
+                           int numNormals,
+                           int numTextureCoords,
+                           int numTangents,
+                           int numIndices) {
+  GLuint vaoID = createVAO();
+  bindIndicesBuffer(indices, numIndices);
+  
+  storeDataInAttributeList(POSITION_ATTRIBUTE_INDEX, positions, 3, numVertices);
+  storeDataInAttributeList(NORMAL_ATTRIBUTE_INDEX, normals, 3, numNormals);
+  storeDataInAttributeList(TEXTURE_COORD_ATTRIBUTE_INDEX, texCoords, 2, numTextureCoords);
+  storeDataInAttributeList(TANGENT_ATTRIBUTE_INDEX, tangents, 3, numTangents);
+  unbindVAO();
+  
+  RawModel model{vaoID, (GLuint) numVertices, (GLuint) numIndices};
+  model.mAttributes.push_back(POSITION_ATTRIBUTE_INDEX);
+  model.mAttributes.push_back(NORMAL_ATTRIBUTE_INDEX);
+  model.mAttributes.push_back(TEXTURE_COORD_ATTRIBUTE_INDEX);
+  model.mAttributes.push_back(TANGENT_ATTRIBUTE_INDEX);
+  
+  return model;
+}
+
 RawModel Loader::loadQuadToVAO(GLfloat positions[]) {
   GLuint vaoID = createVAO();
   

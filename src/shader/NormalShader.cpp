@@ -18,13 +18,25 @@ void NormalShader::init(const std::string &vertexFilepath, const std::string &fr
   registerUniform("skyColor");
   registerUniform("numTextureRows");
   registerUniform("textureAtlasXYOffset");
+  registerUniform("modelTexture");
+  registerUniform("normalMap");
   
   for (int i = 0; i < MAX_LIGHTS; ++i) {
-    registerUniform("lightPosition[" + std::to_string(i) + "]");
+    registerUniform("lightPositionEyeSpace[" + std::to_string(i) + "]");
     registerUniform("lightColor[" + std::to_string(i) + "]");
     registerUniform("attenuations[" + std::to_string(i) + "]");
   }
   
+}
+
+void NormalShader::connectTextureUnits() {
+  loadInt(0, "modelTexture");
+  loadInt(1, "normalMap");
+}
+
+void NormalShader::loadClipPlane(const glm::vec4& clipPlane) {
+  auto location = mUniforms["clipPlane"];
+  glUniform4fv(location, 1, glm::value_ptr(clipPlane));
 }
 
 void NormalShader::loadTextureAtlasXYOffset(const glm::vec2& offset) {
@@ -45,16 +57,24 @@ void NormalShader::loadSkyColor(const glm::vec3& skyColor) {
   glUniform3f(skyColorLocation, skyColor.r, skyColor.g, skyColor.b);
 }
 
-void NormalShader::loadLights(const std::vector<Light>& lights) {  
+void NormalShader::loadLights(const std::vector<Light>& lights, const glm::mat4& viewMatrix) {
   for (int i = 0; i < MAX_LIGHTS; ++i) {
     auto iStr = std::to_string(i);
-    auto lightPosLocation = mUniforms["lightPosition[" + iStr + "]"];
+    auto lightPosLocation = mUniforms["lightPositionEyeSpace[" + iStr + "]"];
     auto lightColLocation = mUniforms["lightColor[" + iStr + "]"];
     auto attLocation = mUniforms["attenuations[" + iStr + "]"];
+    
     if (i < lights.size()) {
       auto light = lights.at(i);
       
-      glUniform3f(lightPosLocation, light.mPosition.x, light.mPosition.y, light.mPosition.z);
+      // transform to eye space
+      glm::vec4 lightPos{light.mPosition.x,
+                         light.mPosition.y,
+                         light.mPosition.z,
+                         1.0f};
+      glm::vec4 lightEyeSpacePos = viewMatrix * lightPos;
+      
+      glUniform3f(lightPosLocation, lightEyeSpacePos.x, lightEyeSpacePos.y, lightEyeSpacePos.z);                  
       glUniform3f(lightColLocation, light.mColor.r, light.mColor.g, light.mColor.b);
       glUniform3f(attLocation, light.mAttenuation.x, light.mAttenuation.y, light.mAttenuation.z);
     }
@@ -95,4 +115,10 @@ void NormalShader::loadModelMatrix(const glm::mat4& modelMatrix) {
   auto modelMatrixLocation = mUniforms["modelMatrix"];
   
   glUniformMatrix4fv(modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+}
+
+void NormalShader::loadInt(GLuint i, const std::string& name) {
+  auto location = mUniforms[name];
+  
+  glUniform1i(location, i);
 }

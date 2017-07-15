@@ -16,6 +16,7 @@ enum class TexturedModelType {
   GRASS,
   PLAYER,
   LAMP,
+  BARREL,
   TOTAL_TYPES,
   NONE
 };
@@ -27,7 +28,8 @@ static std::map<TexturedModelType, std::string> textureModelStrings = {
   std::pair<TexturedModelType, std::string>{TexturedModelType::FERN, "FERN"},
   std::pair<TexturedModelType, std::string>{TexturedModelType::GRASS, "GRASS"},
   std::pair<TexturedModelType, std::string>{TexturedModelType::PLAYER, "PLAYER"},
-  std::pair<TexturedModelType, std::string>{TexturedModelType::LAMP, "LAMP"}
+  std::pair<TexturedModelType, std::string>{TexturedModelType::LAMP, "LAMP"},
+  std::pair<TexturedModelType, std::string>{TexturedModelType::BARREL, "BARREL"}
 };
 
 class TexturedModel {

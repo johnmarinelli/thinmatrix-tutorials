@@ -25,6 +25,17 @@ public:
                      int numTextureCoords,
                      int numIndices);
   
+  RawModel loadToVAO(GLfloat positions[],
+                     GLfloat normals[],
+                     GLfloat texCoords[],
+                     GLfloat tangents[],
+                     GLuint indices[],
+                     int numVertices,
+                     int numNormals,
+                     int numTextureCoords,
+                     int numTangents,
+                     int numIndices);
+  
   RawModel loadQuadToVAO(GLfloat positions[]);
   RawModel loadCubeToVAO(GLfloat positions[]);
   

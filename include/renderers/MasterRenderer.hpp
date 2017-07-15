@@ -25,8 +25,10 @@ public:
   void init(GLFWwindow* window, Loader& loader);
   
   void addTexturedModel(const TexturedModel& texturedModel);
+  void addNormalTexturedModel(const TexturedModel& texturedModel);
   
   void addEntity(std::shared_ptr<Entity> entity, TexturedModelType texturedModelType);
+  void addNormalEntity(std::shared_ptr<Entity> entity, TexturedModelType texturedModelType);
   
   void addTerrain(const Terrain& terrain);
   void update(double dt);
@@ -51,7 +53,8 @@ public:
   
   glm::vec3 mSkyColor;
   
-  std::map<TexturedModelType, std::pair<TexturedModel, std::vector<std::shared_ptr<Entity>>>> mEntities;
+  TexturedEntityMap mEntities;
+  TexturedEntityMap mNormalEntities;
 };
 
 #endif
