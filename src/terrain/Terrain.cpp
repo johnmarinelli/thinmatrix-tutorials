@@ -1,4 +1,5 @@
 #include "Terrain.hpp"
+#include "stb_image.hpp"
 
 Terrain::Terrain(int gridX, int gridZ, Loader& loader, const TerrainTexturePack& texturePack, const TerrainTexture& blendMap, const std::string& heightMapPath) :
   mTerrainTexturePack(texturePack),
@@ -9,38 +10,26 @@ Terrain::Terrain(int gridX, int gridZ, Loader& loader, const TerrainTexturePack&
   mRawModel = generateTerrain(loader, heightMapPath);
 }
 
-float Terrain::getHeight(int x, int z, int imgWidth, int imgHeight, png_bytep* pngRows) {
+float Terrain::getHeight(int x, int z, int imgWidth, int imgHeight, const StbImage& img) {
   if (x < 0 || x >= imgWidth || z < 0 || z >= imgHeight) {
     return 0.0f;
   }
   
-  png_byte* row = pngRows[z];
+  glm::ivec3 rgb = img.getRGB(x, z);
+  int h = (rgb.r << 16) + (rgb.g << 8) + rgb.b;
   
-  // NOTE:
-  // since heightmap.png produced by thinmatrix tutorial 21
-  // is an rgba png,
-  // our offset is 4.
-  
-  // later, you'll want to refactor this to take png_byte `depth` of the png image
-  // into consideration.
-  unsigned int r = row[x * 4];
-  unsigned int g = row[x * 4 + 1];
-  unsigned int b = row[x * 4 + 2];
-  
-  float rr = (r / 255.0f) * 2.0f - 1.0f;
-  //float gg = (g / 255.0f) * 2.0f - 1.0f;
-  //float bb = (b / 255.0f) * 2.0f - 1.0f;
-  
-  // since it's a grayscale image we can just use one value
-  float height = rr * MAX_HEIGHT;
-  return height;
+  double height = h;
+  height /= (MAX_PIXEL_VALUE / 2.0);
+  height -= 1.0;
+  height *= MAX_HEIGHT;
+  return (float) height;
 }
 
-glm::vec3 Terrain::calculateNormal(int x, int z, int imgWidth, int imgHeight, png_bytep* pngRows) {
-  float heightLeft = getHeight(x - 1, z, imgWidth, imgHeight, pngRows);
-  float heightRight = getHeight(x + 1, z, imgWidth, imgHeight, pngRows);
-  float heightDown = getHeight(x, z - 1, imgWidth, imgHeight, pngRows);
-  float heightUp = getHeight(x, z + 1, imgWidth, imgHeight, pngRows);
+glm::vec3 Terrain::calculateNormal(int x, int z, int imgWidth, int imgHeight, const StbImage &img) {
+  float heightLeft = getHeight(x - 1, z, imgWidth, imgHeight, img);
+  float heightRight = getHeight(x + 1, z, imgWidth, imgHeight, img);
+  float heightDown = getHeight(x, z - 1, imgWidth, imgHeight, img);
+  float heightUp = getHeight(x, z + 1, imgWidth, imgHeight, img);
   
   glm::vec3 normal{heightLeft - heightRight, 2.0f, heightDown - heightUp};
   return glm::normalize(normal);
@@ -54,12 +43,14 @@ float Terrain::baryCentric(const glm::vec3& p1, const glm::vec3& p2, const glm::
   return l1 * p1.y + l2 * p2.y + l3 * p3.y;
 }
 
-void Terrain::initHeightMap(png_bytep* pngRows, int width, int height) {
+void Terrain::initHeightMap(const StbImage& img) {
+  int width = img.mWidth;
+  int height = img.mHeight;
   mHeightMap = HeightMap{width, height};
   
   for (auto i = 0; i < height; ++i) {
     for (auto j = 0; j < width; ++j) {
-      auto h = getHeight(j, i, width, height, pngRows);
+      auto h = getHeight(j, i, width, height, img);
       mHeightMap.setIndexedHeight(j, i, h);
     }
   }
@@ -69,7 +60,6 @@ float Terrain::getHeightAtCoord(float worldX, float worldZ) const {
   float terrainX = worldX - mX;
   float terrainZ = worldZ - mZ;
   float gridSquareSize = SIZE / ((float) mHeightMap.mIndexedHeights.size() - 1);
-  //float height = 0.0f;
   float height = std::numeric_limits<float>::min();
   
   int gridX = std::floor(terrainX / gridSquareSize);
@@ -100,12 +90,11 @@ float Terrain::getHeightAtCoord(float worldX, float worldZ) const {
 }
 
 RawModel Terrain::generateTerrain(Loader& loader, const std::string& filepath) {
-  int width, height;
+  StbImage img{filepath.c_str()};
+  initHeightMap(img);
   
-  // IMPORTANT:
-  // delete pngRows later
-  png_bytep* pngRows = readPNG(filepath, width, height);
-  initHeightMap(pngRows, width, height);
+  int width = img.mWidth;
+  int height = img.mHeight;
   
   int VERTEX_COUNT = height;
   
@@ -121,14 +110,14 @@ RawModel Terrain::generateTerrain(Loader& loader, const std::string& filepath) {
   for (auto i = 0; i < VERTEX_COUNT; ++i) {
     
     for (auto j = 0; j < VERTEX_COUNT; ++j) {
-      float vertexHeight = getHeight(j, i, width, height, pngRows);
+      float vertexHeight = getHeight(j, i, width, height, img);
       vertexHeight = mHeightMap.mIndexedHeights[j][i];
       
       mVertices[vertexPointer*3] = (float)j/((float)VERTEX_COUNT - 1.0f) * SIZE;
       mVertices[vertexPointer*3+1] = vertexHeight;
       mVertices[vertexPointer*3+2] = (float)i/((float)VERTEX_COUNT - 1.0f) * SIZE;
       
-      glm::vec3 normal = calculateNormal(j, i, width, height, pngRows);
+      glm::vec3 normal = calculateNormal(j, i, width, height, img);
       mNormals[vertexPointer*3] = normal.x;
       mNormals[vertexPointer*3+1] = normal.y;
       mNormals[vertexPointer*3+2] = normal.z;
@@ -155,8 +144,6 @@ RawModel Terrain::generateTerrain(Loader& loader, const std::string& filepath) {
     }
   }
   
-  free(pngRows);
-  
   return loader.loadToVAO((GLfloat*) &mVertices[0],
                           (GLfloat*) &mNormals[0],
                           (GLfloat*) &mTexCoords[0],
@@ -166,69 +153,3 @@ RawModel Terrain::generateTerrain(Loader& loader, const std::string& filepath) {
                           (GLuint) mTexCoords.size(),
                           (GLuint) mIndices.size());
 }
-
-/*
-png_bytep* Terrain::readPNG(const std::string& fn, int& width, int& height) {
-  png_byte color_type, bit_depth;
-  png_bytep *row_pointers;
-  char* filename = (char*) fn.c_str();
-  
-  FILE *fp = fopen(filename, "rb");
-  
-  png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-  if(!png) abort();
-  
-  png_infop info = png_create_info_struct(png);
-  if(!info) abort();
-  
-  if(setjmp(png_jmpbuf(png))) abort();
-  
-  png_init_io(png, fp);
-  
-  png_read_info(png, info);
-  
-  width      = png_get_image_width(png, info);
-  height     = png_get_image_height(png, info);
-  color_type = png_get_color_type(png, info);
-  bit_depth  = png_get_bit_depth(png, info);
-  
-  // Read any color_type into 8bit depth, RGBA format.
-  // See http://www.libpng.org/pub/png/libpng-manual.txt
-  
-  if(bit_depth == 16)
-    png_set_strip_16(png);
-  
-  if(color_type == PNG_COLOR_TYPE_PALETTE)
-    png_set_palette_to_rgb(png);
-  
-  // PNG_COLOR_TYPE_GRAY_ALPHA is always 8 or 16bit depth.
-  if(color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
-    png_set_expand_gray_1_2_4_to_8(png);
-  
-  if(png_get_valid(png, info, PNG_INFO_tRNS))
-    png_set_tRNS_to_alpha(png);
-  
-  // These color_type don't have an alpha channel then fill it with 0xff.
-  if(color_type == PNG_COLOR_TYPE_RGB ||
-     color_type == PNG_COLOR_TYPE_GRAY ||
-     color_type == PNG_COLOR_TYPE_PALETTE)
-    png_set_filler(png, 0xFF, PNG_FILLER_AFTER);
-  
-  if(color_type == PNG_COLOR_TYPE_GRAY ||
-     color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
-    png_set_gray_to_rgb(png);
-  
-  png_read_update_info(png, info);
-  
-  row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * height);
-  for(int y = 0; y < height; y++) {
-    row_pointers[y] = (png_byte*)malloc(png_get_rowbytes(png,info));
-  }
-  
-  png_read_image(png, row_pointers);
-  
-  fclose(fp);
-  
-  return row_pointers;
-}
-*/

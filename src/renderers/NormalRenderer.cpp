@@ -43,7 +43,7 @@ void NormalRenderer::prepareTexturedModel(const TexturedModel &model) {
   }
   
   if (texture.mHasTransparency) {
-    glDisable(GL_CULL_FACE);
+    disableCulling();
   }
   
   mShaderProgram.loadShineVariables(texture.mShineDamper, texture.mReflectivity);
@@ -55,7 +55,7 @@ void NormalRenderer::prepareTexturedModel(const TexturedModel &model) {
 }
 
 void NormalRenderer::unbindTexturedModel(const TexturedModel &model) {
-  glEnable(GL_CULL_FACE);
+  enableCulling();
   auto rawModel = model.mRawModel;
   
   for (auto att : rawModel.mAttributes) {
@@ -83,5 +83,14 @@ void NormalRenderer::prepare(const std::vector<Light> &lights, const glm::vec3 &
 
 void NormalRenderer::cleanUp() {
   mShaderProgram.cleanUp();
+}
+
+void NormalRenderer::enableCulling() {
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
+}
+
+void NormalRenderer::disableCulling() {
+  glDisable(GL_CULL_FACE);
 }
 

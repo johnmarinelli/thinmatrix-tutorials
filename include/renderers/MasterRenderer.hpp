@@ -32,7 +32,7 @@ public:
   
   void addTerrain(const Terrain& terrain);
   void update(double dt);
-  void render(const std::vector<Light>& lights);
+  void render(const std::vector<Light>& lights, const glm::vec4& clipPlane = glm::vec4{0.0f, -1.0f, 0.0f, 10.0f});
   
   void prepare();
   glm::mat4 createProjectionMatrix(int width, int height) const;

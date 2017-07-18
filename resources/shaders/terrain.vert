@@ -11,6 +11,7 @@ uniform vec3 lightColor;
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 modelMatrix;
+uniform vec4 horizontalClipPlane;
 
 out vec3 color;
 out vec2 texCoord;
@@ -28,6 +29,8 @@ void main(void) {
   texCoord = vTexCoord;
   worldNormal = (modelMatrix * vec4(vNormal, 0.0)).xyz;
 
+  gl_ClipDistance[0] = dot(worldPosition, horizontalClipPlane);
+
   for (int i = 0; i < 4; ++i) {
     toLightDir[i] = lightPosition[i] - worldPosition.xyz;
   }
@@ -40,6 +43,9 @@ void main(void) {
   float dis = length(positionRelativeToCamera.xyz);
   visibility = exp(-pow((dis * fogDensity), fogGradient));
   visibility = clamp(visibility, 0.0, 1.0);
+  
+  // TODO: temporary fix.  fix visibility after everything is done
+  visibility = 1.0;
   
   gl_Position = projectionMatrix * viewMatrix * worldPosition;
 }

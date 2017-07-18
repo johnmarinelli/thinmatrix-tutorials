@@ -15,7 +15,7 @@ public:
   std::vector<GLuint> mVAOs = {};
   std::vector<GLuint> mVBOs = {};
   std::vector<GLuint> mTextures = {};
-  
+
   RawModel loadToVAO(GLfloat positions[],
                      GLfloat normals[],
                      GLfloat texCoords[],
@@ -35,6 +35,8 @@ public:
                      int numTextureCoords,
                      int numTangents,
                      int numIndices);
+  
+  RawModel loadWaterToVAO(GLfloat positions[]);
   
   RawModel loadQuadToVAO(GLfloat positions[]);
   RawModel loadCubeToVAO(GLfloat positions[]);

@@ -10,11 +10,13 @@
 #include "RawModel.hpp"
 #include "TerrainTexturePack.hpp"
 
+class StbImage;
+
 class Terrain {
 public:
-  const float SIZE = 800.0f;
-  //const int VERTEX_COUNT = 128;
+  const float SIZE = 128.0f;
   const float MAX_HEIGHT = 40.0f;
+  const int MAX_PIXEL_VALUE = 256 * 256 * 256;
   
   std::vector<GLfloat> mVertices;
   std::vector<GLfloat> mNormals;
@@ -53,19 +55,17 @@ public:
   
   Terrain(int gridX, int gridZ, Loader& loader, const TerrainTexturePack& texturePack, const TerrainTexture& blendMap, const std::string& heightMapPath);
   
-  float getHeight(int x, int z, int imgWidth, int imgHeight, png_bytep* pngRows);
+  float getHeight(int x, int z, int imgWidth, int imgHeight, const StbImage& img);
   
-  glm::vec3 calculateNormal(int x, int z, int imgWidth, int imgHeight, png_bytep* pngRows);
+  glm::vec3 calculateNormal(int x, int z, int imgWidth, int imgHeight, const StbImage& img);
   
   float baryCentric(const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::vec2& pos) const;
   
-  void initHeightMap(png_bytep* pngRows, int width, int height);
+  void initHeightMap(const StbImage& img);
   
   float getHeightAtCoord(float worldX, float worldZ) const;
   
   RawModel generateTerrain(Loader& loader, const std::string& filepath);
-  
-  //png_bytep* readPNG(const std::string& fn, int& width, int& height);
 };
 
 #endif

@@ -10,7 +10,7 @@ uniform vec3 fogColor;
 uniform float blendFactor;
 
 const float lowerLimit = 0.0;
-const float upperLimit = 0.3;
+const float upperLimit = 0.01;
 
 void main() {
   vec4 dayTexture = texture(dayCubeMap, textureCoords);
@@ -21,4 +21,5 @@ void main() {
   float factor = (textureCoords.y - lowerLimit) / (upperLimit - lowerLimit);
   factor = clamp(factor, 0.0, 1.0);
   outColor = mix(vec4(fogColor, 1.0), finalColor, factor);
+  outColor = finalColor;
 }

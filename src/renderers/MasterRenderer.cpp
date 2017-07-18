@@ -30,13 +30,13 @@ void MasterRenderer::init(GLFWwindow* window, Loader& loader) {
   
   mStaticShader.use();
   mStaticShader.loadProjectionMatrix(mProjectionMatrix);
-  mStaticShader.loadAmbientFactor(0.2f);
+  mStaticShader.loadAmbientFactor(0.5f);
   mStaticShader.loadSkyColor(mSkyColor);
   mStaticShader.disable();
   
   mTerrainShader.use();
   mTerrainShader.loadProjectionMatrix(mProjectionMatrix);
-  mTerrainShader.loadAmbientFactor(0.2f);
+  mTerrainShader.loadAmbientFactor(0.5f);
   mTerrainShader.loadSkyColor(mSkyColor);
   mTerrainShader.disable();
 }
@@ -92,7 +92,7 @@ void MasterRenderer::update(double dt) {
   mEntityRenderer.mCamera.update(dt);
 }
 
-void MasterRenderer::render(const std::vector<Light>& lights) {
+void MasterRenderer::render(const std::vector<Light>& lights, const glm::vec4& clipPlane) {
   prepare();
   
   auto viewMatrix = mEntityRenderer.mCamera.createViewMatrix();
@@ -100,6 +100,7 @@ void MasterRenderer::render(const std::vector<Light>& lights) {
   mStaticShader.use();
   mStaticShader.loadLights(lights);
   mStaticShader.loadViewMatrix(viewMatrix);
+  mStaticShader.loadHorizontalClipPlane(clipPlane);
   mEntityRenderer.render(mEntities);
   mStaticShader.disable();
 
@@ -108,11 +109,11 @@ void MasterRenderer::render(const std::vector<Light>& lights) {
   mTerrainShader.use();
   mTerrainShader.loadLights(lights);
   mTerrainShader.loadViewMatrix(viewMatrix);
+  mTerrainShader.loadHorizontalClipPlane(clipPlane);
   mTerrainRenderer.render(mTerrains);
   mTerrainShader.disable();
   
   mSkyboxRenderer.render(mEntityRenderer.mCamera, mSkyColor);
-
 }
 
 void MasterRenderer::prepare() {

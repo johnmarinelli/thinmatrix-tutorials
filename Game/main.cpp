@@ -24,6 +24,8 @@
 #include "Timer.hpp"
 #include "GUIRenderer.hpp"
 #include "MousePicker.hpp"
+#include "WaterRenderer.hpp"
+#include "WaterFrameBuffers.hpp"
 
 std::shared_ptr<Player> player;
 MasterRenderer masterRenderer;
@@ -134,6 +136,12 @@ NormalShader loadNormalShader() {
   return shaderProgram;
 }
 
+WaterShader loadWaterShader() {
+  WaterShader shaderProgram;
+  shaderProgram.init("resources/shaders/water.vert", "resources/shaders/water.frag");
+  return shaderProgram;
+}
+
 static GLFWwindow* initGLFW() {
   GLFWwindow* window;
   
@@ -228,10 +236,12 @@ std::shared_ptr<Entity> createEntity(const TexturedModel& texModel, const glm::v
   return entity;
 }
 
-void registerEntity(const std::shared_ptr<Entity> entity, MasterRenderer& masterRenderer, TexturedModelType texturedModelType) {
+void registerEntity(const std::shared_ptr<Entity> entity, MasterRenderer& masterRenderer, TexturedModelType texturedModelType, bool adjustHeight = true) {
   // quick & dirty way to ensure entity is rendered at terrain height
-  // TODO: change this later  
-  entity->mPosition.y = masterRenderer.mTerrains[0].getHeightAtCoord(entity->mPosition.x, entity->mPosition.z);
+  // TODO: change this later
+  if (adjustHeight) {
+    entity->mPosition.y = masterRenderer.mTerrains[0].getHeightAtCoord(entity->mPosition.x, entity->mPosition.z);
+  }
   
   masterRenderer.addEntity(entity, texturedModelType);
 }
@@ -245,11 +255,11 @@ void registerNormalEntity(const std::shared_ptr<Entity> entity, MasterRenderer& 
 }
 
 void generateFerns(MasterRenderer& masterRenderer, const TexturedModel& fernTexModel) {
-  int numFerns = 400;
+  int numFerns = 50;
   
   for (auto i = 0; i < numFerns; ++i) {
-    auto rx = random(0.0f, 800.0f);
-    auto rz = random(0.0f, 800.0f);
+    auto rx = random(0.0f, 128.0f);
+    auto rz = random(0.0f, 128.0f);
     auto pos = glm::vec3{rx, 0.0f, rz};
     
     auto fern = createEntity(fernTexModel, pos);
@@ -277,7 +287,7 @@ int main(int argc, const char * argv[]) {
    * Texture pack for terrain
    */
   TerrainTexturePack texturePack{bgTexture, rTexture, gTexture, bTexture};
-  Terrain terrain{0, 0, loader, texturePack, blendMap, "resources/textures/heightmap.png"};
+  Terrain terrain{0, 0, loader, texturePack, blendMap, "resources/textures/heightmap2.png"};
   masterRenderer.addTerrain(terrain);
   
   /*
@@ -287,21 +297,22 @@ int main(int argc, const char * argv[]) {
   TerrainShader terrainShader = loadTerrainShader();
   SkyboxShader skyboxShader = loadSkyboxShader();
   NormalShader normalShader = loadNormalShader();
+  WaterShader waterShader = loadWaterShader();
   glm::vec3 lightPos0{0.0f, 10000.0f, -7000.0f};
   glm::vec3 lightCol0{0.7f, 0.7f, 0.7f};
   Light light0{lightPos0, lightCol0};
   
-  glm::vec3 lightPos1{185.0f, -4.7f, 23.0f};
+  glm::vec3 lightPos1{18.5f, -4.7f, 23.0f};
   glm::vec3 lightCol1{3.0f, 0.0f, 0.0f};
   glm::vec3 attenuation1{1.0f, 0.01f, 0.002f};
   Light light1{lightPos1, lightCol1, attenuation1};
   
-  glm::vec3 lightPos2{370.0f, 17.0f, 300.0f};
+  glm::vec3 lightPos2{90.0f, 17.0f, 40.0f};
   glm::vec3 lightCol2{0.0f, 2.0f, 2.0f};
   glm::vec3 attenuation2{1.0f, 0.01f, 0.002f};
   Light light2{lightPos2, lightCol2, attenuation2};
   
-  glm::vec3 lightPos3{293.0f, 7.0f, 305.0f};
+  glm::vec3 lightPos3{30.5f, 7.0f, 45.0f};
   glm::vec3 lightCol3{2.0f, 2.0f, 0.0f};
   glm::vec3 attenuation3{1.0f, 0.01f, 0.002f};
   Light light3{lightPos3, lightCol3, attenuation3};
@@ -345,10 +356,10 @@ int main(int argc, const char * argv[]) {
   auto entity = createEntity(texturedModel, glm::vec3{50.0f, 0.0f, 30.0f});
   auto fernEntity = createEntity(fernTexturedModel, glm::vec3{75.0f, 0.0f, 25.0f});
   auto grassEntity = createEntity(grassTexturedModel, glm::vec3{25.0f, 0.0f, 25.0f});
-  auto lampEntity = createEntity(lampTexturedModel, glm::vec3{185.0f, -4.7f, 23.0f});
-  auto lampEntity2 = createEntity(lampTexturedModel, glm::vec3{370.0f, 17.0f, 300.0f});
-  auto lampEntity3 = createEntity(lampTexturedModel, glm::vec3{293.0f, 7.0f, 305.0f});
-  auto barrelEntity = createEntity(barrelTexturedModel, glm::vec3{210.0f, 10.0f, 300.0f});
+  auto lampEntity = createEntity(lampTexturedModel, lightPos1);
+  auto lampEntity2 = createEntity(lampTexturedModel, lightPos2);
+  auto lampEntity3 = createEntity(lampTexturedModel, lightPos3);
+  auto barrelEntity = createEntity(barrelTexturedModel, glm::vec3{21.0f, 10.0f, 30.0f});
   
   masterRenderer.addTexturedModel(texturedModel);
   masterRenderer.addTexturedModel(fernTexturedModel);
@@ -360,23 +371,46 @@ int main(int argc, const char * argv[]) {
   registerEntity(entity, masterRenderer, TexturedModelType::DRAGON);
   registerEntity(fernEntity, masterRenderer, TexturedModelType::FERN);
   registerEntity(grassEntity, masterRenderer, TexturedModelType::GRASS);
-  registerEntity(lampEntity, masterRenderer, TexturedModelType::LAMP);
-  registerEntity(lampEntity2, masterRenderer, TexturedModelType::LAMP);
-  registerEntity(lampEntity3, masterRenderer, TexturedModelType::LAMP);
+  registerEntity(lampEntity, masterRenderer, TexturedModelType::LAMP, false);
+  registerEntity(lampEntity2, masterRenderer, TexturedModelType::LAMP, false);
+  registerEntity(lampEntity3, masterRenderer, TexturedModelType::LAMP, false);
   registerNormalEntity(barrelEntity, masterRenderer, TexturedModelType::BARREL);
   
   generateFerns(masterRenderer, fernTexturedModel);
 
-  player = std::make_shared<Player>(playerTexturedModel, glm::vec3{200.0f, 10.0f, 290.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
+  player = std::make_shared<Player>(playerTexturedModel, glm::vec3{70.0f, 0.0f, 80.0f}, glm::vec3{0.0f, 1.0f, 0.0f}, glm::vec3{1.0f});
   masterRenderer.mEntityRenderer.mCamera.mPlayerHdl = player;
   registerEntity(player, masterRenderer, TexturedModelType::PLAYER);
   
-  std::vector<GUITexture> guis;
-  GUITexture gui{loader.loadTexture("resources/textures/puppy.png"), glm::vec2{0.9f, 0.9f}, glm::vec2{0.2f, 0.2f}};
-  guis.push_back(gui);
-  
   GUIRenderer guiRenderer{loader};
+  
+  /*
+   * raycasted mouse picking
+   */
   mousePicker.init(masterRenderer.mProjectionMatrix, masterRenderer.mEntityRenderer.mCamera, masterRenderer.mTerrains[0]);
+  
+  /*
+   * Water
+   */
+  
+  WaterFrameBuffers fbos;
+  
+  WaterTile water{64.0f, 64.0f, 0.0f};
+  std::vector<WaterTile> waters{water};
+  WaterRenderer waterRenderer;
+  waterRenderer.mShaderProgram = waterShader;
+  waterRenderer.init(loader, masterRenderer.mProjectionMatrix, masterRenderer.mEntityRenderer.mCamera, fbos);
+  waterRenderer.setupVAO(loader);
+  
+  /*
+   * GUI elements
+   */
+  std::vector<GUITexture> guis;
+  GUITexture reflectionTexGUI{(int) fbos.mReflectionTextureID, glm::vec2{-0.9f, 0.9f}, glm::vec2{0.25f, 0.25f}};
+  GUITexture refractionTexGUI{(int) fbos.mRefractionTextureID, glm::vec2{-0.9f, 0.0f}, glm::vec2{0.25f, 0.25f}};
+  
+  guis.push_back(reflectionTexGUI);
+  guis.push_back(refractionTexGUI);
   
   while (!glfwWindowShouldClose(window)) {
     timer.update();
@@ -389,9 +423,35 @@ int main(int argc, const char * argv[]) {
       player->update(dt, masterRenderer.mTerrains[0]);
       masterRenderer.update(dt);
       mousePicker.update(masterRenderer.mEntityRenderer.mCamera.createViewMatrix());
+      waterRenderer.update(dt);
       delta -= dt;      
     }
+    
+    glEnable(GL_CLIP_DISTANCE0);
+    
+    // render to reflection fbo
+    fbos.bindReflectionFrameBuffer();
+    Camera* camHdl = &masterRenderer.mEntityRenderer.mCamera;
+    float dis = 2.0f * (camHdl->mPosition.y - water.mHeight);
+    camHdl->mPosition.y -= dis;
+    camHdl->mPitch *= -1;
+    // cull everything below the water surface
+    masterRenderer.render(lights, glm::vec4{0.0, 1.0, 0.0, -water.mHeight});
+    fbos.unbindCurrentFrameBuffer();
+    
+    camHdl->mPosition.y += dis;
+    camHdl->mPitch *= -1;
+    
+    // render to refraction fbo
+    fbos.bindRefractionFrameBuffer();
+    // cull everything above the water surface
+    masterRenderer.render(lights, glm::vec4{0.0, -1.0, 0.0, water.mHeight});
+    fbos.unbindCurrentFrameBuffer();
+
+    glDisable(GL_CLIP_PLANE0);
+    
     masterRenderer.render(lights);
+    waterRenderer.render(waters);
     guiRenderer.render(guis);
     
     glfwSwapBuffers(window);
@@ -407,7 +467,7 @@ int main(int argc, const char * argv[]) {
   
   masterRenderer.cleanUp();
   loader.cleanUp();
-  
+  fbos.cleanUp();
   glfwDestroyWindow(window);
   glfwTerminate();
   

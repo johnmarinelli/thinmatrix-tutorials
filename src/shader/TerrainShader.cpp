@@ -34,6 +34,7 @@ void TerrainShader::init(const std::string& vertexFilepath, const std::string& f
   registerUniform("gTexture");
   registerUniform("bTexture");
   registerUniform("blendMap");
+  registerUniform("horizontalClipPlane");
   
   for (int i = 0; i < MAX_LIGHTS; ++i) {
     registerUniform("lightPosition[" + std::to_string(i) + "]");
@@ -111,4 +112,9 @@ void TerrainShader::loadModelMatrix(const glm::mat4& modelMatrix) {
   
   glUniformMatrix4fv(modelMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
   
+}
+
+void TerrainShader::loadHorizontalClipPlane(const glm::vec4& clipPlane) {
+  auto location = mUniforms["horizontalClipPlane"];
+  glUniform4fv(location, 1, glm::value_ptr(clipPlane));
 }

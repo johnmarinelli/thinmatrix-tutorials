@@ -31,6 +31,9 @@ public:
   void prepareInstance(std::shared_ptr<Entity> entity);
   void prepare(const std::vector<Light>& lights, const glm::vec3& skyColor);
   void cleanUp();
+  
+  void enableCulling();
+  void disableCulling();
 };
 
 #endif

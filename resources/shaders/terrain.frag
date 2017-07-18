@@ -73,28 +73,6 @@ void main(void) {
   }
   
   totalDiffuse = max(totalDiffuse, ambientFactor);
-  
-  /*
-   * Lighting
-   
-  vec3 unitNormal = normalize(worldNormal);
-  vec3 unitToLightDir = normalize(toLightDir);
-  
-  // Specular lighting
-  vec3 unitCameraDir = normalize(cameraDir);
-  vec3 lightDir = -unitToLightDir;
-  vec3 reflectedLightDir = reflect(lightDir, unitNormal);
-  float specularFactor = dot(reflectedLightDir, unitCameraDir);
-  specularFactor = max(specularFactor, 0.0);
-  float dampedFactor = pow(specularFactor, shineDamper);
-  vec3 specular = dampedFactor * reflectivity * lightColor;
-  
-  // Diffuse lighting
-  float ndot = dot(unitNormal, unitToLightDir);
-  float brightness = max(ndot, ambientFactor);
-  vec3 diffuse = brightness * lightColor;
-   */
-  
   fragColor = vec4(totalDiffuse, 1.0) * texColor + vec4(totalSpecular, 1.0);
   fragColor = mix(vec4(skyColor, 1.0), fragColor, visibility);
 }

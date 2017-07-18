@@ -34,6 +34,8 @@ public:
   void loadViewMatrix(const glm::mat4& viewMatrix);
   
   void loadModelMatrix(const glm::mat4& modelMatrix);
+
+  void loadHorizontalClipPlane(const glm::vec4& clipPlane);
 };
 
 #endif

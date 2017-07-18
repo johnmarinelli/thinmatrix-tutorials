@@ -26,6 +26,8 @@ out float visibility;
 const float fogDensity = 0.0;
 const float fogGradient = 5.0;
 
+uniform vec4 horizontalClipPlane;
+
 void main(void) {
   // if a model is planar (like grass)
   // but needs to be lit appropriately
@@ -36,6 +38,8 @@ void main(void) {
   }
   
   vec4 worldPosition = modelMatrix * vec4(vPos, 1.0);
+  
+  gl_ClipDistance[0] = dot(worldPosition, horizontalClipPlane);
   
   texCoord = (vTexCoord / numTextureRows) + textureAtlasXYOffset;
   worldNormal = (modelMatrix * vec4(actualNormal, 0.0)).xyz;
@@ -55,7 +59,6 @@ void main(void) {
   // exponential fog calculations
   float dis = length(positionRelativeToCamera.xyz);
   visibility = exp(-pow((dis * fogDensity), fogGradient));
-  visibility = clamp(visibility, 0.0, 1.0);
-  
+  visibility = clamp(visibility, 0.0, 1.0);  
   gl_Position = projectionMatrix * viewMatrix * worldPosition;
 }

@@ -75,6 +75,14 @@ RawModel Loader::loadQuadToVAO(GLfloat positions[]) {
   return model;
 }
 
+RawModel Loader::loadWaterToVAO(GLfloat positions[]) {
+  GLuint vaoID = createVAO();
+  storeDataInAttributeList(POSITION_ATTRIBUTE_INDEX, positions, 2, 12);
+  RawModel model{vaoID, 6, 0};
+  model.mAttributes.push_back(POSITION_ATTRIBUTE_INDEX);
+  return model;
+}
+
 RawModel Loader::loadCubeToVAO(GLfloat positions[]) {
   GLuint vaoID = createVAO();
   
@@ -167,40 +175,6 @@ GLuint Loader::loadCubemap(const std::vector<std::string>& filepaths) {
   
   return texID;
 }
-
-/*GLuint Loader::loadCubeMap(const std::vector<std::string>& facesFilepaths) {
-  GLuint texID = 0;
-  glGenTextures(1, &texID);
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_CUBE_MAP, texID);
-  
-  int width, height;
-  
-  // remember to put filepaths IN ORDER of GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, etc.
-  for (int i = 0; i < facesFilepaths.size(); ++i) {
-    png_bytep* data = readPNG(facesFilepaths.at(i), width, height);
-    if (nullptr != data) {
-      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-      
-    }
-    else {
-      std::cout << "Cubemap texture failed to load: " << facesFilepaths.at(i) << '\n';
-    }
-    
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    
-    free(data);
-  }
-  
-  mTextures.push_back(texID);
-  
-  return texID;
-}
- */
 
 void Loader::unbindVAO() {
   glBindVertexArray(0);

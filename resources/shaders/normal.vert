@@ -8,7 +8,6 @@ layout (location = 3) in vec3 vTangent;
 const int NUM_LIGHTS = 4;
 
 out vec2 texCoord;
-//out vec3 surfaceNormal;
 out vec3 toLightDir[NUM_LIGHTS];
 out vec3 toCameraDir;
 out float visibility;
