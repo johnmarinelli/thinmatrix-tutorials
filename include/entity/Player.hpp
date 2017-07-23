@@ -28,7 +28,7 @@ public:
 
   const float RUN_SPEED = 50.0f;
   const float TURN_SPEED = 160.0f;
-  const float GRAVITY = -50.0f;
+  const float GRAVITY = GLOBAL_GRAVITY;
   const float JUMP_POWER = 30.0;
   const float TERRAIN_HEIGHT = 0.0f;
   

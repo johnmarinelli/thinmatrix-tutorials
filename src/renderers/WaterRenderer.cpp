@@ -7,7 +7,8 @@ WaterRenderer::WaterRenderer() :
 }
 
 void WaterRenderer::init(Loader& loader, const glm::mat4& projMatrix, Camera& camera, WaterFrameBuffers& waterFBs) {
-  mDuDvTexture = loader.loadTexture("resources/textures/waterDUDV.png");
+  mDuDvTexture = loader.loadTexture("resources/textures/water/waterDUDV.png");
+  mNormalMap = loader.loadTexture("resources/textures/water/normalMap.png");
   mProjectionMatrix = projMatrix;
   mCameraHdl = &camera;
   mWaterFramebuffersHdl = &waterFBs;
@@ -16,6 +17,12 @@ void WaterRenderer::init(Loader& loader, const glm::mat4& projMatrix, Camera& ca
   mShaderProgram.use();
   mShaderProgram.loadProjectionMatrix(mProjectionMatrix);
   mShaderProgram.connectTextureUnits();
+  mShaderProgram.disable();
+}
+
+void WaterRenderer::loadLight(const Light& light) {
+  mShaderProgram.use();
+  mShaderProgram.loadLight(light);
   mShaderProgram.disable();
 }
 
@@ -55,12 +62,24 @@ void WaterRenderer::prepare() {
   glActiveTexture(GL_TEXTURE1);
   glBindTexture(GL_TEXTURE_2D, mWaterFramebuffersHdl->mRefractionTextureID);
   
-  // activate dudv texture
+  // activate & bind dudv texture
   glActiveTexture(GL_TEXTURE2);
   glBindTexture(GL_TEXTURE_2D, mDuDvTexture);
+  
+  // activate & bind normal map
+  glActiveTexture(GL_TEXTURE3);
+  glBindTexture(GL_TEXTURE_2D, mNormalMap);
+  
+  // activate & bind refraction depth texture
+  glActiveTexture(GL_TEXTURE4);
+  glBindTexture(GL_TEXTURE_2D, mWaterFramebuffersHdl->mRefractionDepthBufferID);
+  
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void WaterRenderer::unbind() {
+  glDisable(GL_BLEND);
   for (auto att : mQuad.mAttributes) {
     glDisableVertexAttribArray(att);
   }

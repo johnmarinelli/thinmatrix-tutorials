@@ -18,10 +18,13 @@ public:
   glm::mat4 mProjectionMatrix;
   WaterFrameBuffers* mWaterFramebuffersHdl;
   GLuint mDuDvTexture;
+  GLuint mNormalMap;
   const float WAVE_SPEED = 10.0f;
   float mMoveFactor;
   
   WaterRenderer();
+  
+  void loadLight(const Light& light);
   
   void init(Loader& loader, const glm::mat4& projectionMatrix, Camera& camera, WaterFrameBuffers& waterFBs);
   

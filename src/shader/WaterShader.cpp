@@ -1,4 +1,5 @@
 #include "WaterShader.hpp"
+#include "Light.hpp"
 
 void WaterShader::init(const std::string& vertexFilepath, const std::string& fragmentFilepath) {
   initFromFiles(vertexFilepath, fragmentFilepath);
@@ -8,18 +9,41 @@ void WaterShader::init(const std::string& vertexFilepath, const std::string& fra
   registerUniform("viewMatrix");
   registerUniform("reflectionTexture");
   registerUniform("refractionTexture");
+  registerUniform("refractionDepthTexture");
   registerUniform("dudvMap");
   registerUniform("moveFactor");
   registerUniform("cameraPosition");
+  registerUniform("normalMap");
+  registerUniform("lightPosition");
+  registerUniform("lightColor");
 }
 
 void WaterShader::connectTextureUnits() {
   auto reflectionLocation = mUniforms["reflectionTexture"];
   auto refractionLocation = mUniforms["refractionTexture"];
+  auto refractionDepthLocation = mUniforms["refractionDepthTexture"];
   auto dudvLocation = mUniforms["dudvMap"];
+  auto normalMapLocation = mUniforms["normalMap"];
   glUniform1i(reflectionLocation, 0);
   glUniform1i(refractionLocation, 1);
   glUniform1i(dudvLocation, 2);
+  glUniform1i(normalMapLocation, 3);
+  glUniform1i(refractionDepthLocation, 4);
+}
+
+void WaterShader::loadLightColor(const glm::vec3& lightColor) {
+  auto location = mUniforms["lightColor"];
+  glUniform3fv(location, 1, glm::value_ptr(lightColor));
+}
+
+void WaterShader::loadLight(const Light& light) {
+  loadLightPosition(light.mPosition);
+  loadLightColor(light.mColor);
+}
+
+void WaterShader::loadLightPosition(const glm::vec3& lightPosition) {
+  auto location = mUniforms["lightPosition"];
+  glUniform3fv(location, 1, glm::value_ptr(lightPosition));
 }
 
 void WaterShader::loadMoveFactor(float moveFactor) {

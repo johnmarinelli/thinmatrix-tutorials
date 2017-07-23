@@ -2,6 +2,7 @@
 #define WaterShader_hpp
 
 #include "ShaderProgram.hpp"
+class Light;
 
 class WaterShader : public ShaderProgram {
 public:
@@ -10,6 +11,9 @@ public:
   
   void connectTextureUnits();
   
+  void loadLight(const Light& light);
+  void loadLightColor(const glm::vec3& lightColor);
+  void loadLightPosition(const glm::vec3& lightPosition);
   void loadMoveFactor(float moveFactor);
   void loadCameraPosition(const glm::vec3& cameraPosition);
   void loadProjectionMatrix(const glm::mat4& projectionMatrix);

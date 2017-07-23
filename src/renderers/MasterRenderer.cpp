@@ -39,6 +39,7 @@ void MasterRenderer::init(GLFWwindow* window, Loader& loader) {
   mTerrainShader.loadAmbientFactor(0.5f);
   mTerrainShader.loadSkyColor(mSkyColor);
   mTerrainShader.disable();
+  
 }
 
 void MasterRenderer::addTexturedModel(const TexturedModel& texturedModel) {
@@ -114,6 +115,7 @@ void MasterRenderer::render(const std::vector<Light>& lights, const glm::vec4& c
   mTerrainShader.disable();
   
   mSkyboxRenderer.render(mEntityRenderer.mCamera, mSkyColor);
+
 }
 
 void MasterRenderer::prepare() {

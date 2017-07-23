@@ -25,6 +25,8 @@ const int COLOR_ATTRIBUTE_INDEX = 4;
 const int VIEWPORT_WIDTH = 640;
 const int VIEWPORT_HEIGHT = 480;
 
+const float GLOBAL_GRAVITY = -50.0f;
+
 static double delta = 0.0;
 static double dt = 0.0;
 
@@ -39,7 +41,7 @@ inline float random(float min, float max) {
   return min + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (max - min)));
 }
 
-png_bytep* readPNG(const std::string& fn, int& width, int& height);
+GLint reportGLError();
 
 typedef std::map<TexturedModelType, std::pair<TexturedModel, std::vector<std::shared_ptr<Entity>>>> TexturedEntityMap;
 

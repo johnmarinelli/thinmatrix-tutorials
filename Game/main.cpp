@@ -26,10 +26,13 @@
 #include "MousePicker.hpp"
 #include "WaterRenderer.hpp"
 #include "WaterFrameBuffers.hpp"
+#include "FontRenderer.hpp"
+#include "ParticleMaster.hpp"
 
 std::shared_ptr<Player> player;
 MasterRenderer masterRenderer;
 MousePicker mousePicker;
+ParticleMaster particleMaster;
 double lastMouseXPosition = -1.0;
 double lastMouseYPosition = -1.0;
 bool leftMouseButtonDown = false;
@@ -108,6 +111,13 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
     case GLFW_KEY_SPACE:
       if (action == GLFW_PRESS) player->handleInput(PlayerMovementDirection::JUMP, GLFW_PRESS);
       break;
+    case GLFW_KEY_Y:
+      if (action == GLFW_PRESS) {
+        auto playerPos = player->mPosition;
+        Particle particle{playerPos, glm::vec3{0.0f, 30.0f, 0.0f}, 1.0f, 4.0f, 1.0f, 1.0f};
+        particleMaster.addParticle(particle);
+        
+      }
     default: break;
   }
 }
@@ -410,8 +420,19 @@ int main(int argc, const char * argv[]) {
   GUITexture refractionTexGUI{(int) fbos.mRefractionTextureID, glm::vec2{-0.9f, 0.0f}, glm::vec2{0.25f, 0.25f}};
   
   guis.push_back(reflectionTexGUI);
-  guis.push_back(refractionTexGUI);
+  guis.push_back(refractionTexGUI);  
   
+  /* 
+   * Font
+   */
+  FontRenderer fontRenderer;
+  fontRenderer.init();
+  
+  /*
+   * Particles
+   */
+  particleMaster.init(loader, masterRenderer.mProjectionMatrix, masterRenderer.mEntityRenderer.mCamera);
+
   while (!glfwWindowShouldClose(window)) {
     timer.update();
     delta = timer.getDelta();
@@ -423,6 +444,7 @@ int main(int argc, const char * argv[]) {
       player->update(dt, masterRenderer.mTerrains[0]);
       masterRenderer.update(dt);
       mousePicker.update(masterRenderer.mEntityRenderer.mCamera.createViewMatrix());
+      particleMaster.update(dt);
       waterRenderer.update(dt);
       delta -= dt;      
     }
@@ -436,7 +458,7 @@ int main(int argc, const char * argv[]) {
     camHdl->mPosition.y -= dis;
     camHdl->mPitch *= -1;
     // cull everything below the water surface
-    masterRenderer.render(lights, glm::vec4{0.0, 1.0, 0.0, -water.mHeight});
+    masterRenderer.render(lights, glm::vec4{0.0, 1.0, 0.0, -water.mHeight + 1.0f});
     fbos.unbindCurrentFrameBuffer();
     
     camHdl->mPosition.y += dis;
@@ -451,23 +473,24 @@ int main(int argc, const char * argv[]) {
     glDisable(GL_CLIP_PLANE0);
     
     masterRenderer.render(lights);
+    waterRenderer.loadLight(lights.at(0));
     waterRenderer.render(waters);
+    particleMaster.render();
     guiRenderer.render(guis);
+    
+    glm::mat4 proj = glm::ortho(0.0f, (float) VIEWPORT_WIDTH, 0.0f, (float) VIEWPORT_HEIGHT);
+    
+    fontRenderer.render("hello world", proj);
     
     glfwSwapBuffers(window);
     
-    int glErr = glGetError();
-    
-    if (0 != glErr) {
-      std::cout << "OPENGL ERROR! code: " << glErr << '\n';
-      const GLubyte *errString = gluErrorString(glErr);
-      std::cout << errString << '\n';
-    }
+    reportGLError();
   }
   
   masterRenderer.cleanUp();
   loader.cleanUp();
   fbos.cleanUp();
+  particleMaster.cleanUp();
   glfwDestroyWindow(window);
   glfwTerminate();
   
